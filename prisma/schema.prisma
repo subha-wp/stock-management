@@ -1,0 +1,126 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  hashedPassword String
+  name           String?
+  avatarUrl      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  products   Product[]
+  invoices   Invoice[]
+  estimates  Estimate[]
+  businesses Business[]
+
+  // Auth related fields
+  sessions Session[]
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  logoUrl     String?
+  bankName    String?
+  ifscCode    String?
+  accountNo   String?
+  upiId       String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  invoices    Invoice[]
+  estimates   Estimate[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  unit        String    @default("piece") // New field
+  taxPercent  Float     @default(0)       // New field
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  invoiceItems InvoiceItem[]
+  estimateItems EstimateItem[]
+}
+
+model Invoice {
+  id                String    @id @default(cuid())
+  number           String    @unique
+  clientName       String
+  clientEmail      String
+  clientAddress    String?
+  additionalAddress String?
+  date             DateTime  @default(now())
+  dueDate          DateTime
+  status           String
+  total            Float
+  userId           String
+  businessId       String
+  user             User      @relation(fields: [userId], references: [id])
+  business         Business  @relation(fields: [businessId], references: [id])
+  items            InvoiceItem[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model Estimate {
+  id                String    @id @default(cuid())
+  number           String    @unique
+  clientName       String
+  clientEmail      String
+  clientAddress    String?
+  additionalAddress String?
+  date             DateTime  @default(now())
+  expiryDate       DateTime
+  status           String
+  total            Float
+  userId           String
+  businessId       String
+  user             User      @relation(fields: [userId], references: [id])
+  business         Business  @relation(fields: [businessId], references: [id])
+  items            EstimateItem[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model EstimateItem {
+  id         String   @id @default(cuid())
+  quantity   Int
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  estimateId String
+  estimate   Estimate @relation(fields: [estimateId], references: [id])
+}
