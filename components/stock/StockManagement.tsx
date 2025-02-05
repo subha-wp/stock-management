@@ -22,7 +22,12 @@ import {
 import { toast } from "sonner";
 import { Product } from "@/types";
 
-export function StockManagement({ product }: { product: Product }) {
+interface StockManagementProps {
+  product: Product;
+  onUpdate: () => void;
+}
+
+export function StockManagement({ product, onUpdate }: StockManagementProps) {
   const [quantity, setQuantity] = useState("0");
   const [type, setType] = useState("PURCHASE");
   const [note, setNote] = useState("");
@@ -50,6 +55,7 @@ export function StockManagement({ product }: { product: Product }) {
       toast.success("Stock updated successfully");
       setQuantity("0");
       setNote("");
+      onUpdate(); // Refresh the products list
     } catch (error) {
       toast.error("Failed to update stock");
     } finally {
@@ -60,7 +66,7 @@ export function StockManagement({ product }: { product: Product }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Stock Management</CardTitle>
+        <CardTitle>{product.name}</CardTitle>
         <CardDescription>
           Current Stock: {product.stock} {product.unit}s
         </CardDescription>
@@ -100,7 +106,7 @@ export function StockManagement({ product }: { product: Product }) {
               placeholder="Add a note for this transaction"
             />
           </div>
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Updating..." : "Update Stock"}
           </Button>
         </form>
