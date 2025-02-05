@@ -88,30 +88,3 @@ export interface InvoiceItem {
   product: Product;
   invoiceId: string;
 }
-
-export interface Estimate {
-  id: string;
-  number: string;
-  clientName: string;
-  clientEmail: string;
-  clientAddress?: string;
-  additionalAddress?: string;
-  date: Date;
-  expiryDate: Date;
-  status: string;
-  total: number;
-  userId: string;
-  businessId: string;
-  business?: Business;
-  items?: EstimateItem[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface EstimateItem {
-  id: string;
-  quantity: number;
-  productId: string;
-  product: Product;
-  estimateId: string;
-}
