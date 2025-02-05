@@ -1,4 +1,4 @@
-import { Business, Estimate, Invoice, Product } from "@/types";
+import { Business, Invoice, Product } from "@/types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -120,43 +120,5 @@ export async function updateInvoice(
     body: JSON.stringify(data),
   });
   if (!response.ok) throw new Error("Failed to update invoice");
-  return response.json();
-}
-
-// Estimate Services
-export async function getEstimates(): Promise<Estimate[]> {
-  const response = await fetch(`${BASE_URL}/api/estimates`);
-  if (!response.ok) throw new Error("Failed to fetch estimates");
-  return response.json();
-}
-
-export async function getEstimate(id: string): Promise<Estimate> {
-  const response = await fetch(`${BASE_URL}/api/estimates/${id}`);
-  if (!response.ok) throw new Error("Failed to fetch estimate");
-  return response.json();
-}
-
-export async function createEstimate(
-  data: Omit<Estimate, "id" | "userId" | "createdAt" | "updatedAt">
-): Promise<Estimate> {
-  const response = await fetch(`${BASE_URL}/api/estimates`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) throw new Error("Failed to create estimate");
-  return response.json();
-}
-
-export async function updateEstimate(
-  id: string,
-  data: Partial<Estimate>
-): Promise<Estimate> {
-  const response = await fetch(`${BASE_URL}/api/estimates/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) throw new Error("Failed to update estimate");
   return response.json();
 }

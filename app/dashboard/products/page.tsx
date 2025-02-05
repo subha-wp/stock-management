@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-unused-vars */
+//@ts-nocheck
 "use client";
 
 import { useState } from "react";
@@ -38,21 +38,25 @@ import {
   Edit,
   Trash2,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { deleteProduct } from "@/lib/services/api";
 
 export default function ProductsPage() {
-  const { products, loading, mutate } = useProducts();
-  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    products,
+    loading,
+    pagination,
+    search,
+    setSearch,
+    page,
+    setPage,
+    mutate,
+  } = useProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleDelete = async (productId: string) => {
     try {
@@ -95,8 +99,8 @@ export default function ProductsPage() {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         <Input
           placeholder="Search products..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
         />
       </div>
@@ -113,7 +117,7 @@ export default function ProductsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProducts.map((product) => {
+            {products.map((product) => {
               const stockStatus = getStockStatus(product);
               return (
                 <TableRow key={product.id}>
@@ -197,6 +201,30 @@ export default function ProductsPage() {
           </TableBody>
         </Table>
       </div>
+
+      {pagination.pages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm">
+            Page {page} of {pagination.pages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(page + 1)}
+            disabled={page === pagination.pages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

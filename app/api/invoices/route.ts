@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-//@ts-nocheck
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import { NextResponse } from "next/server";
 import { validateRequest } from "@/lib/auth";
 import { createInvoice } from "@/lib/services/invoice.service";
@@ -13,14 +13,45 @@ export async function GET(request: Request) {
   }
 
   try {
-    const invoices = await prisma.invoice.findMany({
-      where: { userId: user.id },
-      include: {
-        items: { include: { product: true } },
-        business: true,
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+
+    const skip = (page - 1) * limit;
+
+    const where = {
+      userId: user.id,
+      OR: [
+        { number: { contains: search, mode: "insensitive" } },
+        { clientName: { contains: search, mode: "insensitive" } },
+        { clientEmail: { contains: search, mode: "insensitive" } },
+      ],
+    };
+
+    const [invoices, total] = await Promise.all([
+      prisma.invoice.findMany({
+        where,
+        include: {
+          items: { include: { product: true } },
+          business: true,
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.invoice.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      invoices,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limit),
+        page,
+        limit,
       },
     });
-    return NextResponse.json(invoices);
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch invoices" },
@@ -36,19 +67,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { clientName, clientEmail, date, dueDate, items, businessId } =
-      await request.json();
-
-    const invoice = await createInvoice({
-      clientName,
-      clientEmail,
-      date,
-      dueDate,
-      items,
-      businessId,
-      user,
-    });
-
+    const data = await request.json();
+    const invoice = await createInvoice({ ...data, user });
     return NextResponse.json(invoice);
   } catch (error) {
     console.error("Create invoice error:", error);
