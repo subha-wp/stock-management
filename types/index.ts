@@ -30,6 +30,7 @@ export interface Product {
   taxPercent: number;
   stock: number;
   minStock: number;
+  images: string[];
   userId: string;
   createdAt: Date;
   updatedAt: Date;

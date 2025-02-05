@@ -62,6 +62,7 @@ model Product {
   taxPercent  Float     @default(0)
   stock       Int       @default(0)      // Current stock quantity
   minStock    Int       @default(0)      // Minimum stock threshold for alerts
+  images      String[]  @default([])     // Array of image URLs
   userId      String
   user        User      @relation(fields: [userId], references: [id])
   invoiceItems InvoiceItem[]
@@ -127,4 +128,3 @@ model InvoiceItem {
   invoiceId String
   invoice   Invoice @relation(fields: [invoiceId], references: [id])
 }
-
