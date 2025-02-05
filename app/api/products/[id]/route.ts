@@ -42,7 +42,26 @@ export async function PUT(
   }
 
   try {
-    const { name, description, price, unit, taxPercent } = await request.json();
+    const {
+      name,
+      description,
+      price,
+      unit,
+      taxPercent,
+      stock,
+      minStock,
+      images,
+    } = await request.json();
+
+    // Get current product to check stock change
+    const currentProduct = await prisma.product.findUnique({
+      where: { id: id },
+    });
+
+    if (!currentProduct || currentProduct.userId !== user.id) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id: id, userId: user.id },
       data: {
@@ -51,8 +70,27 @@ export async function PUT(
         price,
         unit,
         taxPercent,
+        stock: parseInt(stock) || 0,
+        minStock: parseInt(minStock) || 0,
+        images: images || [],
       },
     });
+
+    // Create stock log if stock has changed
+    const newStock = parseInt(stock) || 0;
+    if (newStock !== currentProduct.stock) {
+      const stockDifference = newStock - currentProduct.stock;
+      await prisma.stockLog.create({
+        data: {
+          productId: id,
+          quantity: stockDifference,
+          type: "ADJUSTMENT",
+          note: "Stock adjusted through product edit",
+          userId: user.id,
+        },
+      });
+    }
+
     return NextResponse.json(updatedProduct);
   } catch (error) {
     return NextResponse.json(

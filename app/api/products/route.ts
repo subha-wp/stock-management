@@ -29,7 +29,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { name, description, price, unit, taxPercent } = await request.json();
+    const {
+      name,
+      description,
+      price,
+      unit,
+      taxPercent,
+      stock,
+      minStock,
+      images,
+    } = await request.json();
     const product = await prisma.product.create({
       data: {
         name,
@@ -37,9 +46,26 @@ export async function POST(request: Request) {
         price,
         unit,
         taxPercent,
+        stock: parseInt(stock) || 0,
+        minStock: parseInt(minStock) || 0,
+        images: images || [],
         userId: user.id,
       },
     });
+
+    // Create initial stock log if stock is greater than 0
+    if (parseInt(stock) > 0) {
+      await prisma.stockLog.create({
+        data: {
+          productId: product.id,
+          quantity: parseInt(stock),
+          type: "INITIAL",
+          note: "Initial stock entry",
+          userId: user.id,
+        },
+      });
+    }
+
     return NextResponse.json(product);
   } catch (error) {
     return NextResponse.json(
