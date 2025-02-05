@@ -28,7 +28,35 @@ export interface Product {
   price: number;
   unit: string;
   taxPercent: number;
+  stock: number;
+  minStock: number;
   userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface StockLog {
+  id: string;
+  productId: string;
+  product: Product;
+  quantity: number;
+  type: string;
+  note?: string;
+  userId: string;
+  createdAt: Date;
+}
+
+export interface Payment {
+  id: string;
+  invoiceId: string;
+  invoice: Invoice;
+  amount: number;
+  method: string;
+  reference?: string;
+  note?: string;
+  userId: string;
+  date: Date;
+  createdAt: Date;
 }
 
 export interface Invoice {
@@ -42,10 +70,13 @@ export interface Invoice {
   dueDate: Date;
   status: string;
   total: number;
+  amountPaid: number;
+  balance: number;
   userId: string;
   businessId: string;
   business?: Business;
   items?: InvoiceItem[];
+  payments?: Payment[];
   createdAt: Date;
   updatedAt: Date;
 }

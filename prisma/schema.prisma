@@ -20,8 +20,9 @@ model User {
   invoices   Invoice[]
   estimates  Estimate[]
   businesses Business[]
+  stockLogs  StockLog[]
+  payments   Payment[]
 
-  // Auth related fields
   sessions Session[]
 }
 
@@ -59,12 +60,29 @@ model Product {
   name        String
   description String?
   price       Float
-  unit        String    @default("piece") // New field
-  taxPercent  Float     @default(0)       // New field
+  unit        String    @default("piece")
+  taxPercent  Float     @default(0)
+  stock       Int       @default(0)      // Current stock quantity
+  minStock    Int       @default(0)      // Minimum stock threshold for alerts
   userId      String
   user        User      @relation(fields: [userId], references: [id])
   invoiceItems InvoiceItem[]
   estimateItems EstimateItem[]
+  stockLogs    StockLog[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model StockLog {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int      // Positive for stock in, negative for stock out
+  type        String   // PURCHASE, SALE, ADJUSTMENT
+  note        String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
 }
 
 model Invoice {
@@ -76,15 +94,32 @@ model Invoice {
   additionalAddress String?
   date             DateTime  @default(now())
   dueDate          DateTime
-  status           String
+  status           String    // PENDING, PARTIALLY_PAID, PAID, OVERDUE
   total            Float
+  amountPaid       Float     @default(0)
+  balance          Float     @default(0)
   userId           String
   businessId       String
   user             User      @relation(fields: [userId], references: [id])
   business         Business  @relation(fields: [businessId], references: [id])
   items            InvoiceItem[]
+  payments         Payment[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  amount      Float
+  method      String   // CASH, BANK_TRANSFER, UPI, OTHER
+  reference   String?  // Payment reference number or transaction ID
+  note        String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
 }
 
 model InvoiceItem {
