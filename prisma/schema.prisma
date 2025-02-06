@@ -21,6 +21,7 @@ model User {
   businesses Business[]
   stockLogs  StockLog[]
   payments   Payment[]
+  clients    Client[]    // Add relation to clients
 
   sessions Session[]
 }
@@ -32,6 +33,22 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Client {
+  id          String    @id @default(cuid())
+  name        String
+  email       String?
+  phone       String    @unique  // Make phone unique as it's our lookup field
+  address     String?
+  totalCredit Float     @default(0)  // Track total credit amount
+  userId      String    // Reference to admin/user who created this client
+  user        User      @relation(fields: [userId], references: [id])
+  invoices    Invoice[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([phone])
 }
 
 model Business {
@@ -60,9 +77,9 @@ model Product {
   price       Float
   unit        String    @default("piece")
   taxPercent  Float     @default(0)
-  stock       Int       @default(0)      // Current stock quantity
-  minStock    Int       @default(0)      // Minimum stock threshold for alerts
-  images      String[]  @default([])     // Array of image URLs
+  stock       Int       @default(0)
+  minStock    Int       @default(0)
+  images      String[]  @default([])
   userId      String
   user        User      @relation(fields: [userId], references: [id])
   invoiceItems InvoiceItem[]
@@ -75,8 +92,8 @@ model StockLog {
   id          String   @id @default(cuid())
   productId   String
   product     Product  @relation(fields: [productId], references: [id])
-  quantity    Int      // Positive for stock in, negative for stock out
-  type        String   // PURCHASE, SALE, ADJUSTMENT
+  quantity    Int
+  type        String
   note        String?
   userId      String
   user        User     @relation(fields: [userId], references: [id])
@@ -86,10 +103,8 @@ model StockLog {
 model Invoice {
   id                String    @id @default(cuid())
   number           String    @unique
-  clientName       String
-  clientEmail      String
-  clientAddress    String?
-  additionalAddress String?
+  clientId         String    // Add relation to Client
+  client           Client    @relation(fields: [clientId], references: [id])
   date             DateTime  @default(now())
   dueDate          DateTime
   status           String    // PENDING, PARTIALLY_PAID, PAID, OVERDUE

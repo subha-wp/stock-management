@@ -7,18 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
-import { Product } from "@/types";
+import { Product, Client } from "@/types";
 import { useBusiness } from "@/lib/hooks/useBusiness";
 import { toast } from "sonner";
 import { ItemList } from "@/components/forms/ItemList";
 import { BusinessSelect } from "@/components/forms/BusinessSelect";
+import { ClientSearch } from "@/components/forms/ClientSearch";
 
 export default function CreateInvoice() {
-  const [clientName, setClientName] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
-  const [clientAddress, setClientAddress] = useState("");
-  const [additionalAddress, setAdditionalAddress] = useState("");
+  const [client, setClient] = useState<Client | null>(null);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [dueDate, setDueDate] = useState("");
   const [businessId, setBusinessId] = useState("");
@@ -50,6 +47,11 @@ export default function CreateInvoice() {
       return;
     }
 
+    if (!client) {
+      toast.error("Please select a client");
+      return;
+    }
+
     if (items.some((item) => !item.productId)) {
       toast.error("Please select products for all items");
       return;
@@ -64,10 +66,7 @@ export default function CreateInvoice() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          clientName,
-          clientEmail,
-          clientAddress,
-          additionalAddress,
+          clientId: client.id,
           date,
           dueDate,
           items,
@@ -115,43 +114,43 @@ export default function CreateInvoice() {
             onChange={setBusinessId}
           />
         </div>
-        <div>
-          <Label htmlFor="clientName">Client Name</Label>
-          <Input
-            id="clientName"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            required
-          />
+
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <h2 className="text-lg font-semibold mb-4">Client Information</h2>
+          {client ? (
+            <div className="space-y-2">
+              <p>
+                <strong>Name:</strong> {client.name}
+              </p>
+              <p>
+                <strong>Phone:</strong> {client.phone}
+              </p>
+              {client.email && (
+                <p>
+                  <strong>Email:</strong> {client.email}
+                </p>
+              )}
+              {client.address && (
+                <p>
+                  <strong>Address:</strong> {client.address}
+                </p>
+              )}
+              <p>
+                <strong>Total Credit:</strong> ₹{client.totalCredit.toFixed(2)}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setClient(null)}
+              >
+                Change Client
+              </Button>
+            </div>
+          ) : (
+            <ClientSearch onClientSelect={setClient} />
+          )}
         </div>
-        <div>
-          <Label htmlFor="clientEmail">Client Email</Label>
-          <Input
-            id="clientEmail"
-            type="email"
-            value={clientEmail}
-            onChange={(e) => setClientEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="clientAddress">Client Address</Label>
-          <Textarea
-            id="clientAddress"
-            value={clientAddress}
-            onChange={(e) => setClientAddress(e.target.value)}
-            placeholder="Enter client's primary address"
-          />
-        </div>
-        <div>
-          <Label htmlFor="additionalAddress">Additional Address</Label>
-          <Textarea
-            id="additionalAddress"
-            value={additionalAddress}
-            onChange={(e) => setAdditionalAddress(e.target.value)}
-            placeholder="Enter additional address details (optional)"
-          />
-        </div>
+
         <div>
           <Label htmlFor="date">Date</Label>
           <Input

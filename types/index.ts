@@ -4,6 +4,18 @@ export interface User {
   name: string | null;
 }
 
+export interface Client {
+  id: string;
+  name: string;
+  email?: string;
+  phone: string;
+  address?: string;
+  totalCredit: number;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Business {
   id: string;
   name: string;
@@ -63,10 +75,8 @@ export interface Payment {
 export interface Invoice {
   id: string;
   number: string;
-  clientName: string;
-  clientEmail: string;
-  clientAddress?: string;
-  additionalAddress?: string;
+  clientId: string;
+  client: Client;
   date: Date;
   dueDate: Date;
   status: string;
