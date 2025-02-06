@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Product, Client } from "@/types";
 import { useBusiness } from "@/lib/hooks/useBusiness";
 import { toast } from "sonner";
@@ -32,7 +30,7 @@ export default function CreateInvoice() {
         const response = await fetch("/api/products");
         if (!response.ok) throw new Error("Failed to fetch products");
         const data = await response.json();
-        setProducts(data);
+        setProducts(data.products || []); // Ensure we always set an array
       } catch (err) {
         setError("Failed to load products. Please try again.");
       }

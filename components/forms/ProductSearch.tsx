@@ -1,8 +1,14 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import { Command } from "cmdk";
 import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Search } from "lucide-react";
 
 interface ProductSearchProps {
@@ -10,13 +16,13 @@ interface ProductSearchProps {
   onSelect: (product: Product) => void;
 }
 
-export function ProductSearch({ products, onSelect }: ProductSearchProps) {
+export function ProductSearch({ products = [], onSelect }: ProductSearchProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    if (search.trim()) {
+    if (search.trim() && Array.isArray(products)) {
       const filtered = products.filter(
         (product) =>
           product.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -36,16 +42,19 @@ export function ProductSearch({ products, onSelect }: ProductSearchProps) {
         onClick={() => setOpen(true)}
         className="w-full justify-start text-left font-normal"
       >
-        <Search className=" h-2 w-2" />
+        <Search className="h-4 w-4 mr-2" />
         Search products...
       </Button>
       <DialogContent className="p-0 max-w-[90vw] md:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle className="sr-only">Search Products</DialogTitle>
+        </DialogHeader>
         <Command className="rounded-lg border shadow-md">
           <div
             className="flex items-center border-b px-3"
             cmdk-input-wrapper=""
           >
-            <Search className=" h-4 w-4 shrink-0 opacity-50" />
+            <Search className="h-4 w-4 shrink-0 opacity-50" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
