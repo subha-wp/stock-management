@@ -14,6 +14,7 @@ import {
   Package,
   FileText,
   LogOut,
+  Users,
 } from "lucide-react";
 import { User as UserType } from "@/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -27,6 +28,7 @@ const menuItems = [
   { icon: Building2, label: "Business", href: "/dashboard/business" },
   { icon: Package, label: "Products", href: "/dashboard/products" },
   { icon: FileText, label: "Invoices", href: "/dashboard/invoices" },
+  { icon: Users, label: "Customers", href: "/dashboard/clients" },
 ];
 
 export function Sidebar({ user }: SidebarProps) {
