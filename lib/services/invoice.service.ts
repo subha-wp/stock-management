@@ -1,34 +1,57 @@
+// lib/services/invoice.service.ts
 import prisma from "@/lib/prisma";
 import { User } from "@/types";
 
-export async function createInvoice({
-  clientId,
-  date,
-  dueDate,
-  items,
-  businessId,
-  user,
-}: {
+interface CreateInvoiceData {
   clientId: string;
   date: string;
   dueDate: string;
   items: Array<{ productId: string; quantity: number }>;
   businessId: string;
   user: User;
-}) {
+}
+
+export async function createInvoice(data: CreateInvoiceData) {
+  const { clientId, date, dueDate, items, businessId, user } = data;
+
+  console.log("iServices Data", data);
+
+  // Validate input data
+  if (
+    !clientId ||
+    !date ||
+    !dueDate ||
+    !businessId ||
+    !items?.length ||
+    !user
+  ) {
+    throw new Error("Missing required fields");
+  }
+
+  // Get client
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+  });
+
+  if (!client) {
+    throw new Error("Client not found");
+  }
+
   // Use a transaction to ensure data consistency
   return await prisma.$transaction(async (tx) => {
     // Create the invoice
     const invoice = await tx.invoice.create({
       data: {
         number: `INV-${Date.now()}`,
-        clientId,
         date: new Date(date),
         dueDate: new Date(dueDate),
         status: "PENDING",
         total: 0,
+        amountPaid: 0,
+        balance: 0,
         userId: user.id,
         businessId,
+        clientId,
         items: {
           create: items.map((item) => ({
             quantity: item.quantity,
@@ -42,6 +65,8 @@ export async function createInvoice({
             product: true,
           },
         },
+        client: true,
+        business: true,
       },
     });
 

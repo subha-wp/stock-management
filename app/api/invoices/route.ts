@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+// app/api/invoices/route.ts
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { NextResponse } from "next/server";
@@ -53,6 +53,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
+    console.error("Fetch invoices error:", error);
     return NextResponse.json(
       { error: "Failed to fetch invoices" },
       { status: 500 }
@@ -61,19 +62,49 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { user } = await validateRequest();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    const { user } = await validateRequest();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const data = await request.json();
+
+    // console.log("req data from client", data);
+
+    // Validate required fields
+    if (
+      !data.clientId ||
+      !data.date ||
+      !data.dueDate ||
+      !data.businessId ||
+      !data.items?.length
+    ) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Validate items
+    for (const item of data.items) {
+      if (!item.productId || !item.quantity || item.quantity < 1) {
+        return NextResponse.json(
+          { error: "Invalid item data" },
+          { status: 400 }
+        );
+      }
+    }
+
     const invoice = await createInvoice({ ...data, user });
     return NextResponse.json(invoice);
   } catch (error) {
     console.error("Create invoice error:", error);
     return NextResponse.json(
-      { error: "Failed to create invoice" },
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to create invoice",
+      },
       { status: 500 }
     );
   }
