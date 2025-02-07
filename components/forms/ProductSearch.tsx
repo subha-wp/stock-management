@@ -63,7 +63,9 @@ export function ProductSearch({ products = [], onSelect }: ProductSearchProps) {
             />
           </div>
           <Command.List className="max-h-[300px] overflow-y-auto">
-            <Command.Empty>No products found.</Command.Empty>
+            <Command.Empty className="p-2 text-center">
+              No products found.
+            </Command.Empty>
             {filteredProducts.map((product) => (
               <Command.Item
                 key={product.id}
