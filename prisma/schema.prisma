@@ -101,7 +101,7 @@ model StockLog {
 }
 
 model Invoice {
-  id                String    @id @default(cuid())
+  id               String    @id @default(cuid())
   number           String    @unique
   clientId         String    // Add relation to Client
   client           Client    @relation(fields: [clientId], references: [id])
@@ -110,7 +110,6 @@ model Invoice {
   status           String    // PENDING, PARTIALLY_PAID, PAID, OVERDUE
   total            Float
   amountPaid       Float     @default(0)
-  balance          Float     @default(0)
   userId           String
   businessId       String
   user             User      @relation(fields: [userId], references: [id])
