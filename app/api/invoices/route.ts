@@ -1,0 +1,170 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+//@ts-nocheck
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { validateRequest } from "@/lib/auth";
+
+export async function GET(request: Request) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+
+    const skip = (page - 1) * limit;
+
+    const where = {
+      userId: user.id,
+      OR: [
+        { number: { contains: search, mode: "insensitive" } },
+        { client: { name: { contains: search, mode: "insensitive" } } },
+        { client: { phone: { contains: search, mode: "insensitive" } } },
+      ],
+    };
+
+    const [invoices, total] = await Promise.all([
+      prisma.invoice.findMany({
+        where,
+        include: {
+          client: true,
+          business: true,
+          items: { include: { product: true } },
+          payments: true,
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.invoice.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      invoices,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limit),
+        page,
+        limit,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching invoices:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch invoices" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  const { user } = await validateRequest();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const {
+      clientId,
+      date,
+      dueDate,
+      items,
+      businessId,
+      status = "PENDING",
+    } = await request.json();
+
+    // Get the latest invoice number
+    const latestInvoice = await prisma.invoice.findFirst({
+      orderBy: { createdAt: "desc" },
+    });
+
+    const nextNumber = latestInvoice
+      ? String(parseInt(latestInvoice.number) + 1).padStart(6, "0")
+      : "000001";
+
+    // Calculate total
+    let total = 0;
+    for (const item of items) {
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
+      });
+      if (!product) {
+        throw new Error(`Product not found: ${item.productId}`);
+      }
+      const subtotal = product.price * item.quantity;
+      const tax = (subtotal * product.taxPercent) / 100;
+      total += subtotal + tax;
+    }
+
+    // Create invoice with items
+    const invoice = await prisma.invoice.create({
+      data: {
+        number: nextNumber,
+        clientId,
+        date: new Date(date),
+        dueDate: new Date(dueDate),
+        status,
+        total,
+        userId: user.id,
+        businessId,
+        items: {
+          create: items.map((item) => ({
+            quantity: item.quantity,
+            productId: item.productId,
+          })),
+        },
+      },
+      include: {
+        items: { include: { product: true } },
+        business: true,
+        client: true,
+      },
+    });
+
+    // Update client's total credit
+    await prisma.client.update({
+      where: { id: clientId },
+      data: {
+        totalCredit: {
+          increment: total,
+        },
+      },
+    });
+
+    // Update product stock
+    for (const item of items) {
+      await prisma.product.update({
+        where: { id: item.productId },
+        data: {
+          stock: {
+            decrement: item.quantity,
+          },
+        },
+      });
+
+      // Create stock log
+      await prisma.stockLog.create({
+        data: {
+          productId: item.productId,
+          quantity: -item.quantity,
+          type: "SALE",
+          note: `Invoice #${nextNumber}`,
+          userId: user.id,
+        },
+      });
+    }
+
+    return NextResponse.json(invoice);
+  } catch (error) {
+    console.error("Error creating invoice:", error);
+    return NextResponse.json(
+      { error: "Failed to create invoice" },
+      { status: 500 }
+    );
+  }
+}

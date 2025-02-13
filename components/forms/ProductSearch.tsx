@@ -30,7 +30,7 @@ export function ProductSearch({ products = [], onSelect }: ProductSearchProps) {
       );
       setFilteredProducts(filtered);
     } else {
-      setFilteredProducts([]);
+      setFilteredProducts(products); // Show all products when search is empty
     }
   }, [search, products]);
 
@@ -63,9 +63,11 @@ export function ProductSearch({ products = [], onSelect }: ProductSearchProps) {
             />
           </div>
           <Command.List className="max-h-[300px] overflow-y-auto">
-            <Command.Empty className="p-2 text-center">
-              No products found.
-            </Command.Empty>
+            {filteredProducts.length === 0 && (
+              <Command.Empty className="p-2 text-center">
+                No products found.
+              </Command.Empty>
+            )}
             {filteredProducts.map((product) => (
               <Command.Item
                 key={product.id}
