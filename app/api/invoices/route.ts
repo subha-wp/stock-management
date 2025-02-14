@@ -76,6 +76,7 @@ export async function POST(request: Request) {
       items,
       businessId,
       status = "PENDING",
+      payment = null,
     } = await request.json();
 
     // Get the latest invoice number
@@ -125,6 +126,30 @@ export async function POST(request: Request) {
         client: true,
       },
     });
+
+    // Create payment if provided
+    if (payment) {
+      const { amount, method, reference, note } = payment;
+      await prisma.payment.create({
+        data: {
+          invoiceId: invoice.id,
+          amount,
+          method,
+          reference,
+          note,
+          userId: user.id,
+        },
+      });
+
+      // Update invoice status and amount paid
+      await prisma.invoice.update({
+        where: { id: invoice.id },
+        data: {
+          amountPaid: amount,
+          status: amount >= total ? "PAID" : "PARTIALLY_PAID",
+        },
+      });
+    }
 
     // Update client's total credit
     await prisma.client.update({

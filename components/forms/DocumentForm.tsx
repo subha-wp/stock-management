@@ -13,6 +13,15 @@ import { useBusiness } from "@/lib/hooks/useBusiness";
 import { toast } from "sonner";
 import { ItemList } from "./ItemList";
 import { BusinessSelect } from "./BusinessSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 
 interface DocumentFormProps {
   type: "invoice";
@@ -25,16 +34,6 @@ export function DocumentForm({
   initialData,
   onSubmit,
 }: DocumentFormProps) {
-  const [clientName, setClientName] = useState(initialData?.clientName || "");
-  const [clientEmail, setClientEmail] = useState(
-    initialData?.clientEmail || ""
-  );
-  const [clientAddress, setClientAddress] = useState(
-    initialData?.clientAddress || ""
-  );
-  const [additionalAddress, setAdditionalAddress] = useState(
-    initialData?.additionalAddress || ""
-  );
   const [date, setDate] = useState(
     initialData?.date
       ? new Date(initialData.date).toISOString().split("T")[0]
@@ -60,6 +59,13 @@ export function DocumentForm({
   const router = useRouter();
   const { businesses, loading: loadingBusinesses } = useBusiness();
 
+  // Payment related state
+  const [includePayment, setIncludePayment] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentNote, setPaymentNote] = useState("");
+
   useEffect(() => {
     async function fetchProducts() {
       try {
@@ -75,6 +81,17 @@ export function DocumentForm({
     fetchProducts();
   }, []);
 
+  // Calculate total amount
+  const calculateTotal = () => {
+    return items.reduce((total, item) => {
+      const product = products.find((p) => p.id === item.productId);
+      if (!product) return total;
+      const subtotal = product.price * item.quantity;
+      const tax = (subtotal * product.taxPercent) / 100;
+      return total + subtotal + tax;
+    }, 0);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!businessId) {
@@ -87,21 +104,32 @@ export function DocumentForm({
       return;
     }
 
+    if (includePayment && !paymentAmount) {
+      toast.error("Please enter payment amount");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      await onSubmit({
-        clientName,
-        clientEmail,
-        clientAddress,
-        additionalAddress,
+      const invoiceData = {
         date,
         [type === "invoice" ? "dueDate" : "expiryDate"]: endDate,
         items,
         businessId,
         status: initialData?.status || "PENDING",
-      });
+        payment: includePayment
+          ? {
+              amount: parseFloat(paymentAmount),
+              method: paymentMethod,
+              reference: paymentReference,
+              note: paymentNote,
+            }
+          : null,
+      };
+
+      await onSubmit(invoiceData);
 
       toast.success(
         `${type.charAt(0).toUpperCase() + type.slice(1)} ${
@@ -138,6 +166,8 @@ export function DocumentForm({
     return <div>Loading...</div>;
   }
 
+  const total = calculateTotal();
+
   return (
     <div className="container mx-auto px-4 pb-20">
       <h1 className="text-2xl font-bold my-4">
@@ -154,43 +184,7 @@ export function DocumentForm({
             onChange={setBusinessId}
           />
         </div>
-        <div>
-          <Label htmlFor="clientName">Client Name</Label>
-          <Input
-            id="clientName"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="clientEmail">Client Email</Label>
-          <Input
-            id="clientEmail"
-            type="email"
-            value={clientEmail}
-            onChange={(e) => setClientEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="clientAddress">Client Address</Label>
-          <Textarea
-            id="clientAddress"
-            value={clientAddress}
-            onChange={(e) => setClientAddress(e.target.value)}
-            placeholder="Enter client's primary address"
-          />
-        </div>
-        <div>
-          <Label htmlFor="additionalAddress">Additional Address</Label>
-          <Textarea
-            id="additionalAddress"
-            value={additionalAddress}
-            onChange={(e) => setAdditionalAddress(e.target.value)}
-            placeholder="Enter additional address details (optional)"
-          />
-        </div>
+
         <div>
           <Label htmlFor="date">Date</Label>
           <Input
@@ -223,6 +217,73 @@ export function DocumentForm({
             onUpdateItem={updateItem}
           />
         </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Payment Details</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={includePayment}
+                  onCheckedChange={setIncludePayment}
+                />
+                <Label>Include Payment</Label>
+              </div>
+            </div>
+          </CardHeader>
+          {includePayment && (
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="paymentAmount">Amount</Label>
+                <Input
+                  id="paymentAmount"
+                  type="number"
+                  step="0.01"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  max={total}
+                  required
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Total Invoice Amount: ₹{total.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="paymentMethod">Payment Method</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CASH">Cash</SelectItem>
+                    <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                    <SelectItem value="UPI">UPI</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="paymentReference">Reference Number</Label>
+                <Input
+                  id="paymentReference"
+                  value={paymentReference}
+                  onChange={(e) => setPaymentReference(e.target.value)}
+                  placeholder="Transaction ID or reference number"
+                />
+              </div>
+              <div>
+                <Label htmlFor="paymentNote">Note</Label>
+                <Input
+                  id="paymentNote"
+                  value={paymentNote}
+                  onChange={(e) => setPaymentNote(e.target.value)}
+                  placeholder="Add a note for this payment"
+                />
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading
             ? initialData
