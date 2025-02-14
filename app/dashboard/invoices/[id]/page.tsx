@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 //@ts-nocheck
@@ -18,34 +19,48 @@ import {
 import { ArrowLeft, Download } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Invoice } from "@/types";
+import { Invoice, Payment } from "@/types";
 import { InvoicePDF } from "@/components/invoice-pdf";
 import { InvoiceWeb } from "@/components/invoice-web";
 import { PaymentForm } from "@/components/payments/PaymentForm";
+import { PaymentList } from "@/components/payments/PaymentList";
 
 export default function InvoiceDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
-  useEffect(() => {
-    async function fetchInvoice() {
-      try {
-        const response = await fetch(`/api/invoices/${id}`);
-        if (!response.ok) throw new Error("Failed to fetch invoice");
-        const data = await response.json();
-        setInvoice(data);
-      } catch (error) {
-        toast.error("Failed to fetch invoice details");
-      } finally {
-        setLoading(false);
-      }
+  const fetchInvoice = async () => {
+    try {
+      const response = await fetch(`/api/invoices/${id}`);
+      if (!response.ok) throw new Error("Failed to fetch invoice");
+      const data = await response.json();
+      setInvoice(data);
+    } catch (error) {
+      toast.error("Failed to fetch invoice details");
     }
+  };
 
+  const fetchPayments = async () => {
+    try {
+      const response = await fetch(`/api/payments?invoiceId=${id}`);
+      if (!response.ok) throw new Error("Failed to fetch payments");
+      const data = await response.json();
+      setPayments(data);
+    } catch (error) {
+      toast.error("Failed to fetch payments");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (id) {
       fetchInvoice();
+      fetchPayments();
     }
   }, [id]);
 
@@ -67,6 +82,12 @@ export default function InvoiceDetailsPage() {
     } finally {
       setUpdating(false);
     }
+  };
+
+  const handlePaymentSuccess = async () => {
+    await fetchInvoice();
+    await fetchPayments();
+    toast.success("Payment recorded successfully");
   };
 
   if (loading) {
@@ -102,6 +123,7 @@ export default function InvoiceDetailsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
               <SelectItem value="PAID">Paid</SelectItem>
               <SelectItem value="OVERDUE">Overdue</SelectItem>
               <SelectItem value="CANCELLED">Cancelled</SelectItem>
@@ -133,8 +155,9 @@ export default function InvoiceDetailsPage() {
         <div className="lg:col-span-2">
           <InvoiceWeb invoice={invoice} />
         </div>
-        <div>
-          <PaymentForm invoice={invoice} />
+        <div className="space-y-6">
+          <PaymentForm invoice={invoice} onSuccess={handlePaymentSuccess} />
+          <PaymentList payments={payments} />
         </div>
       </div>
     </div>

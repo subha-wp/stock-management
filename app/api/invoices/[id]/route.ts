@@ -5,8 +5,9 @@ import { validateRequest } from "@/lib/auth";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const { user } = await validateRequest();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,7 +15,7 @@ export async function GET(
 
   try {
     const invoice = await prisma.invoice.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         items: { include: { product: true } },
         business: true,
@@ -38,8 +39,9 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const { user } = await validateRequest();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -48,7 +50,7 @@ export async function PUT(
   try {
     const { status } = await request.json();
     const invoice = await prisma.invoice.update({
-      where: { id: params.id, userId: user.id },
+      where: { id: id, userId: user.id },
       data: { status },
       include: {
         items: { include: { product: true } },
@@ -68,8 +70,9 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const { user } = await validateRequest();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -77,7 +80,7 @@ export async function DELETE(
 
   try {
     await prisma.invoice.deleteMany({
-      where: { id: params.id, userId: user.id },
+      where: { id: id, userId: user.id },
     });
     return NextResponse.json({ message: "Invoice deleted successfully" });
   } catch (error) {

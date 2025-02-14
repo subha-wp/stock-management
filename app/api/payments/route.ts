@@ -2,6 +2,16 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/lib/auth";
+import { z } from "zod";
+
+// Schema for payment validation
+const paymentSchema = z.object({
+  invoiceId: z.string(),
+  amount: z.number().positive(),
+  method: z.enum(["CASH", "BANK_TRANSFER", "UPI", "OTHER"]),
+  reference: z.string().optional(),
+  note: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   const { user } = await validateRequest();
@@ -10,19 +20,24 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { invoiceId, amount, method, reference, note } = await request.json();
+    const body = await request.json();
+    const validatedData = paymentSchema.parse(body);
 
     // Get current invoice
     const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId },
+      where: { id: validatedData.invoiceId },
     });
 
     if (!invoice) {
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
+    if (invoice.userId !== user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Calculate new payment totals
-    const newAmountPaid = invoice.amountPaid + amount;
+    const newAmountPaid = invoice.amountPaid + validatedData.amount;
     const newBalance = invoice.total - newAmountPaid;
 
     // Determine new status
@@ -37,28 +52,40 @@ export async function POST(request: Request) {
     const result = await prisma.$transaction([
       prisma.payment.create({
         data: {
-          invoiceId,
-          amount,
-          method,
-          reference,
-          note,
+          invoiceId: validatedData.invoiceId,
+          amount: validatedData.amount,
+          method: validatedData.method,
+          reference: validatedData.reference,
+          note: validatedData.note,
           userId: user.id,
         },
       }),
       prisma.invoice.update({
-        where: { id: invoiceId },
+        where: { id: validatedData.invoiceId },
         data: {
           amountPaid: newAmountPaid,
-          balance: newBalance,
           status: newStatus,
+        },
+        include: {
+          items: { include: { product: true } },
+          business: true,
+          client: true,
+          payments: true,
         },
       }),
     ]);
 
     return NextResponse.json(result);
   } catch (error) {
+    console.error("Payment error:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Invalid payment data", details: error.errors },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
-      { error: "Failed to record payment" },
+      { error: "Failed to process payment" },
       { status: 500 }
     );
   }
@@ -89,6 +116,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(payments);
   } catch (error) {
+    console.error("Error fetching payments:", error);
     return NextResponse.json(
       { error: "Failed to fetch payments" },
       { status: 500 }

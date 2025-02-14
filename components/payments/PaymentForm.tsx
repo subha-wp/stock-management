@@ -22,7 +22,12 @@ import {
 import { toast } from "sonner";
 import { Invoice } from "@/types";
 
-export function PaymentForm({ invoice }: { invoice: Invoice }) {
+interface PaymentFormProps {
+  invoice: Invoice;
+  onSuccess?: () => void;
+}
+
+export function PaymentForm({ invoice, onSuccess }: PaymentFormProps) {
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("CASH");
   const [reference, setReference] = useState("");
@@ -49,10 +54,14 @@ export function PaymentForm({ invoice }: { invoice: Invoice }) {
       });
 
       if (!response.ok) throw new Error("Failed to record payment");
-      toast.success("Payment recorded successfully");
+
       setAmount("");
       setReference("");
       setNote("");
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       toast.error("Failed to record payment");
     } finally {
@@ -60,12 +69,14 @@ export function PaymentForm({ invoice }: { invoice: Invoice }) {
     }
   };
 
+  const remainingBalance = invoice.total - invoice.amountPaid;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Record Payment</CardTitle>
         <CardDescription>
-          Balance Due: ₹{invoice.total - invoice.amountPaid}
+          Balance Due: ₹{remainingBalance.toFixed(2)}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -79,7 +90,7 @@ export function PaymentForm({ invoice }: { invoice: Invoice }) {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
-              max={invoice.total - invoice.amountPaid}
+              max={remainingBalance}
             />
           </div>
           <div>
@@ -114,7 +125,7 @@ export function PaymentForm({ invoice }: { invoice: Invoice }) {
               placeholder="Add a note for this payment"
             />
           </div>
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Recording..." : "Record Payment"}
           </Button>
         </form>
