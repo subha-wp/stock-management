@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       ? String(parseInt(latestInvoice.number) + 1).padStart(6, "0")
       : "000001";
 
-    // Calculate total
+    // Calculate total with custom prices
     let total = 0;
     for (const item of items) {
       const product = await prisma.product.findUnique({
@@ -97,12 +97,13 @@ export async function POST(request: Request) {
       if (!product) {
         throw new Error(`Product not found: ${item.productId}`);
       }
-      const subtotal = product.price * item.quantity;
+      const price = item.price ?? product.price; // Use custom price if provided
+      const subtotal = price * item.quantity;
       const tax = (subtotal * product.taxPercent) / 100;
       total += subtotal + tax;
     }
 
-    // Create invoice with items
+    // Create invoice with items including custom prices
     const invoice = await prisma.invoice.create({
       data: {
         number: nextNumber,
@@ -117,6 +118,7 @@ export async function POST(request: Request) {
           create: items.map((item) => ({
             quantity: item.quantity,
             productId: item.productId,
+            price: item.price, // Store the custom price
           })),
         },
       },

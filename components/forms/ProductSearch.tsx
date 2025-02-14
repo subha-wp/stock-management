@@ -90,7 +90,13 @@ export function ProductSearch({ products = [], onSelect }: ProductSearchProps) {
                   <div className="text-xs text-muted-foreground mt-1">
                     <span>Tax: {product.taxPercent}%</span>
                     <span className="mx-2">•</span>
-                    <span>Unit: {product.unit}</span>
+                    <span
+                      className={
+                        product.stock <= 1 ? "text-red-500" : "text-green-500"
+                      }
+                    >
+                      Avaiable: {product.stock}
+                    </span>
                   </div>
                 </div>
               </Command.Item>

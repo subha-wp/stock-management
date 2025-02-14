@@ -137,6 +137,7 @@ model Payment {
 model InvoiceItem {
   id        String  @id @default(cuid())
   quantity  Int
+  price     Float?  // Add price field to store custom price
   productId String
   product   Product @relation(fields: [productId], references: [id])
   invoiceId String

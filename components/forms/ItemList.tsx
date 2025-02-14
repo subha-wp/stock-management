@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react";
 import { ProductSearch } from "./ProductSearch";
 
 interface ItemListProps {
-  items: Array<{ productId: string; quantity: number }>;
+  items: Array<{ productId: string; quantity: number; price?: number }>;
   products: Product[];
   onAddItem: () => void;
   onRemoveItem: (index: number) => void;
@@ -26,10 +26,12 @@ export function ItemList({
   const calculateItemTotal = (item: {
     productId: string;
     quantity: number;
+    price?: number;
   }) => {
     const product = getProductById(item.productId);
     if (!product) return 0;
-    const subtotal = product.price * item.quantity;
+    const price = item.price ?? product.price;
+    const subtotal = price * item.quantity;
     const tax = (subtotal * product.taxPercent) / 100;
     return subtotal + tax;
   };
@@ -54,30 +56,46 @@ export function ItemList({
                     </span>
                     <span className="mx-2">•</span>
                     <span>
-                      ₹{getProductById(item.productId)?.price.toFixed(2)}
+                      Base Price: ₹
+                      {getProductById(item.productId)?.price.toFixed(2)}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground">
                     <span>
                       Tax: {getProductById(item.productId)?.taxPercent}%
                     </span>
-                    <span className="mx-2">•</span>
-                    <span>Unit: {getProductById(item.productId)?.unit}</span>
                   </div>
                 </div>
               )}
             </div>
             <div className="flex gap-2">
-              <Input
-                type="number"
-                value={item.quantity}
-                onChange={(e) =>
-                  onUpdateItem(index, "quantity", parseInt(e.target.value))
-                }
-                min="1"
-                className="w-14"
-                required
-              />
+              <div className="flex flex-col gap-2">
+                <Input
+                  type="number"
+                  value={item.quantity}
+                  onChange={(e) =>
+                    onUpdateItem(index, "quantity", parseInt(e.target.value))
+                  }
+                  min="1"
+                  className="w-20"
+                  placeholder="Qty"
+                  required
+                />
+                <Input
+                  type="number"
+                  value={
+                    item.price ?? getProductById(item.productId)?.price ?? ""
+                  }
+                  onChange={(e) =>
+                    onUpdateItem(index, "price", parseFloat(e.target.value))
+                  }
+                  min="0"
+                  step="0.01"
+                  className="w-20"
+                  placeholder="Price"
+                  required
+                />
+              </div>
               <Button
                 type="button"
                 variant="destructive"

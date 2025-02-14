@@ -51,7 +51,8 @@ export function DocumentForm({
     initialData?.items?.map((item) => ({
       productId: item.product.id,
       quantity: item.quantity,
-    })) || [{ productId: "", quantity: 1 }]
+      price: item.product.price,
+    })) || [{ productId: "", quantity: 1, price: 0 }]
   );
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,7 +73,7 @@ export function DocumentForm({
         const response = await fetch("/api/products");
         if (!response.ok) throw new Error("Failed to fetch products");
         const data = await response.json();
-        setProducts(data.products); // Update this line to access the products array
+        setProducts(data.products);
       } catch (err) {
         setError("Failed to load products. Please try again.");
         toast.error("Failed to load products");
@@ -86,7 +87,8 @@ export function DocumentForm({
     return items.reduce((total, item) => {
       const product = products.find((p) => p.id === item.productId);
       if (!product) return total;
-      const subtotal = product.price * item.quantity;
+      const price = item.price ?? product.price;
+      const subtotal = price * item.quantity;
       const tax = (subtotal * product.taxPercent) / 100;
       return total + subtotal + tax;
     }, 0);
@@ -149,7 +151,7 @@ export function DocumentForm({
   };
 
   const addItem = () => {
-    setItems([...items, { productId: "", quantity: 1 }]);
+    setItems([...items, { productId: "", quantity: 1, price: 0 }]);
   };
 
   const removeItem = (index: number) => {
