@@ -234,6 +234,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
   const taxTotal =
     invoice.items?.reduce((sum, item) => sum + calculateTax(item), 0) || 0;
   const total = subtotal + taxTotal;
+  const balanceDue = total - invoice.amountPaid;
 
   return (
     <Document>
@@ -267,20 +268,18 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
                 year: "numeric",
               })}
             </Text>
+            <Text style={styles.text}>Status: {invoice.status}</Text>
           </View>
         </View>
 
         <View style={styles.clientInfo}>
           <Text style={styles.sectionTitle}>Bill To</Text>
           <Text style={[styles.text, { fontWeight: 500 }]}>
-            {invoice.clientName}
+            {invoice.client?.name}
           </Text>
-          <Text style={styles.text}>{invoice.clientEmail}</Text>
-          {invoice.clientAddress && (
-            <Text style={styles.text}>{invoice.clientAddress}</Text>
-          )}
-          {invoice.additionalAddress && (
-            <Text style={styles.text}>{invoice.additionalAddress}</Text>
+          <Text style={styles.text}>{invoice.client?.email}</Text>
+          {invoice.client?.address && (
+            <Text style={styles.text}>{invoice.client?.address}</Text>
           )}
         </View>
 
@@ -345,6 +344,14 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
         <View style={styles.subtotalRow}>
           <Text style={styles.subtotalText}>Tax Total (Rs):</Text>
           <Text style={styles.subtotalText}>{taxTotal}</Text>
+        </View>
+        <View style={styles.subtotalRow}>
+          <Text style={styles.subtotalText}>Amount Paid (Rs):</Text>
+          <Text style={styles.subtotalText}>{invoice.amountPaid}</Text>
+        </View>
+        <View style={styles.subtotalRow}>
+          <Text style={styles.subtotalText}>Balance Due (Rs):</Text>
+          <Text style={styles.subtotalText}>{balanceDue}</Text>
         </View>
         <View style={styles.totalRow}>
           <Text style={styles.totalText}>Total (Rs):</Text>

@@ -13,6 +13,8 @@ export async function GET(
       include: {
         items: { include: { product: true } },
         business: true,
+        client: true,
+        payments: true,
       },
     });
 

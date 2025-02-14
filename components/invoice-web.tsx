@@ -41,8 +41,9 @@ export function InvoiceWeb({ invoice }: { invoice: Invoice }) {
             #{invoice.number}
           </p>
           <div className="space-y-1 text-sm">
-            <p>Date: {new Date().toLocaleDateString()}</p>
+            <p>Date: {new Date(invoice.date).toLocaleDateString()}</p>
             <p>Due Date: {new Date(invoice.dueDate).toLocaleDateString()}</p>
+            <p>Status: {invoice.status}</p>
           </div>
         </div>
       </CardHeader>
@@ -53,10 +54,9 @@ export function InvoiceWeb({ invoice }: { invoice: Invoice }) {
         <div className="mb-8">
           <h3 className="text-lg font-semibold mb-2">Bill To</h3>
           <div className="space-y-1 text-sm">
-            <p className="font-medium">{invoice.clientName}</p>
-            <p>{invoice.clientEmail}</p>
-            {invoice.clientAddress && <p>{invoice.clientAddress}</p>}
-            {invoice.additionalAddress && <p>{invoice.additionalAddress}</p>}
+            <p className="font-medium">{invoice.client?.name}</p>
+            <p>{invoice.client?.email}</p>
+            {invoice.client?.address && <p>{invoice.client?.address}</p>}
           </div>
         </div>
 
@@ -95,14 +95,19 @@ export function InvoiceWeb({ invoice }: { invoice: Invoice }) {
               <span className="font-medium">Subtotal:</span>
               <span>₹{invoice.total.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Tax:</span>
-              <span>₹0.00</span>
-            </div>
+
             <Separator />
             <div className="flex justify-between text-lg font-semibold">
               <span>Total:</span>
               <span>₹{invoice.total.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Amount Paid:</span>
+              <span>- ₹{invoice.amountPaid.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-lg font-semibold">
+              <span className="font-medium">Balance Due:</span>
+              <span>₹{(invoice.total - invoice.amountPaid).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -111,7 +116,7 @@ export function InvoiceWeb({ invoice }: { invoice: Invoice }) {
           <div className="mt-12">
             <h3 className="text-lg font-semibold mb-1 pl-2">Payment Details</h3>
             <Card className="bg-muted max-w-fit">
-              <CardContent className="p-4 space-y-2 text-sm ">
+              <CardContent className="p-4 space-y-2 text-sm">
                 <p>
                   <span className="font-medium">Bank Name:</span>{" "}
                   {invoice.business.bankName}

@@ -129,17 +129,7 @@ export default function InvoiceDetailsPage() {
               <SelectItem value="CANCELLED">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-          <PDFDownloadLink
-            document={<InvoicePDF invoice={invoice} />}
-            fileName={`invoice-${invoice.number}.pdf`}
-          >
-            {({ loading }) => (
-              <Button disabled={loading}>
-                <Download className="w-4 h-4 mr-2" />
-                {loading ? "Generating..." : "Download PDF"}
-              </Button>
-            )}
-          </PDFDownloadLink>
+
           <Button
             variant="outline"
             onClick={() =>
