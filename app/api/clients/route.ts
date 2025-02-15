@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // @ts-nocheck
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
@@ -83,12 +84,39 @@ export async function GET(request: Request) {
         orderBy: { createdAt: "desc" },
         skip,
         take: limit,
+        include: {
+          invoices: {
+            include: {
+              payments: true,
+            },
+          },
+        },
       }),
       prisma.client.count({ where }),
     ]);
 
+    // Calculate actual total dues by subtracting payments
+    const clientsWithCalculatedDues = clients.map((client) => {
+      const totalInvoiceAmount = client.invoices.reduce(
+        (sum, invoice) => sum + invoice.total,
+        0
+      );
+      const totalPayments = client.invoices.reduce(
+        (sum, invoice) =>
+          sum +
+          invoice.payments.reduce((pSum, payment) => pSum + payment.amount, 0),
+        0
+      );
+
+      return {
+        ...client,
+        totalCredit: totalInvoiceAmount - totalPayments,
+        invoices: undefined, // Remove invoices from response to keep it clean
+      };
+    });
+
     return NextResponse.json({
-      clients,
+      clients: clientsWithCalculatedDues,
       pagination: {
         total,
         pages: Math.ceil(total / limit),
