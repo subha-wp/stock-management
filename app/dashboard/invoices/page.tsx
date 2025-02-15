@@ -29,6 +29,9 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
+  View,
+  FilePenLine,
+  Printer,
 } from "lucide-react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/invoice-pdf";
@@ -126,32 +129,13 @@ export default function InvoicesPage() {
                     {invoice.status}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/dashboard/invoices/${invoice.id}`}>
-                          <FileText className="h-4 w-4 mr-2" />
-                          View Details
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <PDFDownloadLink
-                          document={<InvoicePDF invoice={invoice} />}
-                          fileName={`invoice-${invoice.number}.pdf`}
-                          className="flex items-center"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download PDF
-                        </PDFDownloadLink>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <TableCell className="flex items-center">
+                  <Link href={`/dashboard/invoices/${invoice.id}`}>
+                    <FilePenLine className="h-4 w-4 mr-2" />
+                  </Link>
+                  <Link href={`/view/invoices/${invoice.id}`}>
+                    <Printer className="h-4 w-4 mr-2" />
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}

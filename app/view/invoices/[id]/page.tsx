@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Invoice } from "@/types";
 import { InvoiceWeb } from "@/components/invoice-web";
 import { ItemTable } from "@/components/document/ItemTable";
+import { InvoicePreview } from "@/components/invoice/InvoicePreview";
 
 export default function PublicInvoiceView() {
   const { id } = useParams();
@@ -58,12 +59,7 @@ export default function PublicInvoiceView() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div>
-        <InvoiceWeb invoice={invoice} />
-      </div>
-
-      {/* Print-optimized version */}
-      <div className="hidden print:block">
-        <InvoiceWeb invoice={invoice} />
+        <InvoicePreview invoice={invoice} />
       </div>
     </div>
   );

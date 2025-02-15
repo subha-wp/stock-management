@@ -1,0 +1,70 @@
+import type { Invoice } from "@/types";
+
+export function InvoiceThermal({ invoice }: { invoice: Invoice }) {
+  return (
+    <div className="w-[58mm] font-mono text-[10px] leading-tight p-2 bg-white">
+      <div className="text-center mb-2">
+        <h1 className="font-bold text-[12px]">{invoice.business?.name}</h1>
+        <p>{invoice.business?.address}</p>
+        <p>{invoice.business?.phone}</p>
+      </div>
+
+      <div className="mb-2">
+        <p>Invoice: #{invoice.number}</p>
+        <p>Date: {new Date(invoice.date).toLocaleDateString()}</p>
+        <p>Customer: {invoice.client?.name}</p>
+      </div>
+
+      <div className="border-t border-b border-black py-1 mb-2">
+        <div className="flex justify-between font-bold">
+          <span>Item</span>
+          <span>Qty</span>
+          <span>Price</span>
+          <span>Total</span>
+        </div>
+      </div>
+
+      {invoice.items?.map((item) => (
+        <div key={item.id} className="flex justify-between mb-1">
+          <span className="w-1/3 truncate">{item.product.name}</span>
+          <span className="w-1/6 text-right">{item.quantity}</span>
+          <span className="w-1/4 text-right">
+            ₹{item.product.price.toFixed(2)}
+          </span>
+          <span className="w-1/4 text-right">
+            ₹{(item.quantity * item.product.price).toFixed(2)}
+          </span>
+        </div>
+      ))}
+
+      <div className="border-t border-black pt-1 mt-2">
+        <div className="flex justify-between">
+          <span>Total:</span>
+          <span>₹{invoice.total.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Paid:</span>
+          <span>₹{invoice.amountPaid.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between font-bold">
+          <span>Balance Due:</span>
+          <span>₹{(invoice.total - invoice.amountPaid).toFixed(2)}</span>
+        </div>
+      </div>
+
+      {invoice.business?.bankName && (
+        <div className="mt-2 text-center">
+          <p className="font-bold">Payment Details</p>
+          <p>{invoice.business.bankName}</p>
+          <p>Acc: {invoice.business.accountNo}</p>
+          <p>IFSC: {invoice.business.ifscCode}</p>
+          {invoice.business.upiId && <p>UPI: {invoice.business.upiId}</p>}
+        </div>
+      )}
+
+      <div className="mt-2 text-center">
+        <p>Thank you for your business!</p>
+      </div>
+    </div>
+  );
+}
