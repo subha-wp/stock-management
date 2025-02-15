@@ -5,8 +5,9 @@ import { validateRequest } from "@/lib/auth";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const { user } = await validateRequest();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,7 +15,14 @@ export async function GET(
 
   try {
     const client = await prisma.client.findUnique({
-      where: { id: params.id },
+      where: { id: id },
+      include: {
+        invoices: {
+          include: {
+            payments: true,
+          },
+        },
+      },
     });
 
     if (!client || client.userId !== user.id) {
@@ -32,8 +40,9 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const { user } = await validateRequest();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -42,8 +51,15 @@ export async function PUT(
   try {
     const { name, email, phone, address } = await request.json();
     const client = await prisma.client.update({
-      where: { id: params.id, userId: user.id },
+      where: { id: id, userId: user.id },
       data: { name, email, phone, address },
+      include: {
+        invoices: {
+          include: {
+            payments: true,
+          },
+        },
+      },
     });
     return NextResponse.json(client);
   } catch (error) {

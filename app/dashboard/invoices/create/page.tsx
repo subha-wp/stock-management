@@ -70,10 +70,10 @@ export default function CreateInvoicePage() {
                 <span className="font-medium">Phone:</span>{" "}
                 {selectedClient.phone}
               </div>
-              {selectedClient.email && (
+              {selectedClient.totalCredit && (
                 <div>
-                  <span className="font-medium">Email:</span>{" "}
-                  {selectedClient.email}
+                  <span className="font-medium">Total Credit:</span>{" "}
+                  {selectedClient.totalCredit}
                 </div>
               )}
               <Button variant="outline" onClick={() => setSelectedClient(null)}>

@@ -10,12 +10,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Client } from "@/types";
+import { Client, Invoice } from "@/types";
+
+interface ClientWithInvoices extends Client {
+  invoices?: (Invoice & {
+    payments?: { amount: number }[];
+  })[];
+}
 
 export default function EditClientPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [client, setClient] = useState<Client | null>(null);
+  const [client, setClient] = useState<ClientWithInvoices | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -76,6 +82,16 @@ export default function EditClientPage() {
     return <div>Client not found</div>;
   }
 
+  // Calculate total dues by subtracting all payments from invoice totals
+  const totalDues =
+    client.invoices?.reduce((acc, invoice) => {
+      const invoiceTotal = invoice.total;
+      const paymentTotal =
+        invoice.payments?.reduce((sum, payment) => sum + payment.amount, 0) ||
+        0;
+      return acc + (invoiceTotal - paymentTotal);
+    }, 0) || 0;
+
   return (
     <div className="container mx-auto px-4 pb-20">
       <Link
@@ -128,9 +144,7 @@ export default function EditClientPage() {
             </div>
             <div>
               <Label>Total Dues</Label>
-              <p className="text-lg font-semibold">
-                ₹{client.totalCredit.toFixed(2)}
-              </p>
+              <p className="text-lg font-semibold">₹{totalDues.toFixed(2)}</p>
             </div>
             <div className="flex gap-4">
               <Button

@@ -26,9 +26,34 @@ export async function GET(request: Request) {
         phone,
         userId: user.id,
       },
+      include: {
+        invoices: {
+          include: {
+            payments: true,
+          },
+        },
+      },
     });
 
-    return NextResponse.json(client);
+    if (client) {
+      // Calculate total dues
+      const totalDues = client.invoices.reduce((sum, invoice) => {
+        const invoiceTotal = invoice.total;
+        const paymentTotal = invoice.payments.reduce(
+          (pSum, payment) => pSum + payment.amount,
+          0
+        );
+        return sum + (invoiceTotal - paymentTotal);
+      }, 0);
+
+      return NextResponse.json({
+        ...client,
+        totalCredit: totalDues,
+        invoices: undefined,
+      });
+    }
+
+    return NextResponse.json(null);
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to search client" },
