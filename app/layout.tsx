@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,9 +19,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background relative">
           {children}
           <Toaster />
+          <div className="absolute bottom-2 right-6">
+            <small>
+              Made with ❤️ By{" "}
+              <Link href="https://www.nextcoder.co.in">nextCoder</Link>
+            </small>
+          </div>
         </div>
       </body>
     </html>

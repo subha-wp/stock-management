@@ -21,7 +21,7 @@ export default function ClientsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        Loading clients...
+        Loading customers...
       </div>
     );
   }
@@ -29,9 +29,9 @@ export default function ClientsPage() {
   return (
     <div className="container mx-auto px-4 pb-20">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Clients</h1>
+        <h1 className="text-2xl font-bold">Customers</h1>
         <Button asChild>
-          <Link href="/dashboard/clients/create">Add New Client</Link>
+          <Link href="/dashboard/clients/create">Add New Customers</Link>
         </Button>
       </div>
 

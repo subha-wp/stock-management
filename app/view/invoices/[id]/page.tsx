@@ -3,13 +3,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Printer } from "lucide-react";
 import { toast } from "sonner";
 import { Invoice } from "@/types";
-import { InvoiceWeb } from "@/components/invoice-web";
-import { ItemTable } from "@/components/document/ItemTable";
 import { InvoicePreview } from "@/components/invoice/InvoicePreview";
 
 export default function PublicInvoiceView() {
@@ -35,10 +30,6 @@ export default function PublicInvoiceView() {
       fetchInvoice();
     }
   }, [id]);
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   if (loading) {
     return (
