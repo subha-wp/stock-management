@@ -19,7 +19,6 @@ export function ClientSearch({ onClientSelect }: ClientSearchProps) {
   const [showForm, setShowForm] = useState(false);
   const [clientData, setClientData] = useState({
     name: "",
-    email: "",
     phone: "",
     address: "",
   });
@@ -113,18 +112,18 @@ export function ClientSearch({ onClientSelect }: ClientSearchProps) {
             />
           </div>
           <div>
-            <Label htmlFor="email">Email (Optional)</Label>
+            <Label htmlFor="phone">Phone *</Label>
             <Input
-              id="email"
-              type="email"
-              value={clientData.email}
+              id="phone"
+              type="phone"
+              value={phone}
               onChange={(e) =>
-                setClientData({ ...clientData, email: e.target.value })
+                setClientData({ ...clientData, phone: e.target.value })
               }
             />
           </div>
           <div>
-            <Label htmlFor="address">Address (Optional)</Label>
+            <Label htmlFor="address">Address *</Label>
             <Input
               id="address"
               value={clientData.address}
