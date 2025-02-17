@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { QRPopup } from "../payments/qr-popup";
 
 interface DocumentFormProps {
   type: "invoice";
@@ -209,6 +210,7 @@ export function DocumentForm({
             required
           />
         </div>
+
         <div>
           <Label>Items</Label>
           <ItemList
@@ -219,7 +221,15 @@ export function DocumentForm({
             onUpdateItem={updateItem}
           />
         </div>
-
+        <div className="text-right">
+          <p>
+            Total Invoice value:{" "}
+            <span className="font-semibold text-lg text-green-400">
+              ₹{total}
+            </span>
+          </p>
+          <QRPopup amount={total} />
+        </div>
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">

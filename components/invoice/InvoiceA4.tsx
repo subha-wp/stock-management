@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -25,6 +26,11 @@ export function InvoiceA4({ invoice }: { invoice: Invoice }) {
               className="object-contain mb-4"
             />
           )}
+          <img
+            src="/Ramdhanu 96px.png"
+            alt="Business Logo"
+            className="w-28 h-28 object-contain mb-4"
+          />
           <div className="space-y-1 text-sm text-muted-foreground">
             <p className="font-medium text-foreground">
               {invoice.business?.name}

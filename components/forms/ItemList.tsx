@@ -83,9 +83,7 @@ export function ItemList({
                 />
                 <Input
                   type="number"
-                  value={
-                    item.price ?? getProductById(item.productId)?.price ?? ""
-                  }
+                  value={item.price}
                   onChange={(e) =>
                     onUpdateItem(index, "price", parseFloat(e.target.value))
                   }
