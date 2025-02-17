@@ -70,6 +70,7 @@ export function InvoiceA4({ invoice }: { invoice: Invoice }) {
             <TableHead className="font-semibold">Item</TableHead>
             <TableHead className="font-semibold text-right">Quantity</TableHead>
             <TableHead className="font-semibold text-right">Price</TableHead>
+            <TableHead className="font-semibold text-right">D.Price</TableHead>
             <TableHead className="font-semibold text-right">Total</TableHead>
           </TableRow>
         </TableHeader>
@@ -82,7 +83,10 @@ export function InvoiceA4({ invoice }: { invoice: Invoice }) {
                 ₹{item.product.price.toFixed(2)}
               </TableCell>
               <TableCell className="text-right">
-                ₹{(item.quantity * item.product.price).toFixed(2)}
+                ₹{item.price.toFixed(2)}
+              </TableCell>
+              <TableCell className="text-right">
+                ₹{(item.quantity * item.price).toFixed(2)}
               </TableCell>
             </TableRow>
           ))}

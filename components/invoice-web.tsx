@@ -13,6 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { Invoice } from "@/types";
 
 export function InvoiceWeb({ invoice }: { invoice: Invoice }) {
+  console.log("invoice data", invoice);
+
   return (
     <Card className="w-full max-w-4xl mx-auto my-4 p-8 bg-white shadow-lg">
       <CardHeader className="flex flex-row justify-between items-start pb-3 px-0">
@@ -77,6 +79,9 @@ export function InvoiceWeb({ invoice }: { invoice: Invoice }) {
                 Quantity
               </TableHead>
               <TableHead className="font-semibold text-right">Price</TableHead>
+              <TableHead className="font-semibold text-right">
+                D.Price
+              </TableHead>
               <TableHead className="font-semibold text-right">Total</TableHead>
             </TableRow>
           </TableHeader>
@@ -91,7 +96,10 @@ export function InvoiceWeb({ invoice }: { invoice: Invoice }) {
                   ₹{item.product.price.toFixed(2)}
                 </TableCell>
                 <TableCell className="text-right">
-                  ₹{(item.quantity * item.product.price).toFixed(2)}
+                  ₹{item.price.toFixed(2)}
+                </TableCell>
+                <TableCell className="text-right">
+                  ₹{(item.quantity * item.price).toFixed(2)}
                 </TableCell>
               </TableRow>
             ))}

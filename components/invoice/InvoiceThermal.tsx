@@ -20,19 +20,21 @@ export function InvoiceThermal({ invoice }: { invoice: Invoice }) {
           <span>Item</span>
           <span>Qty</span>
           <span>Price</span>
+          <span>D.Price</span>
           <span>Total</span>
         </div>
       </div>
 
       {invoice.items?.map((item) => (
         <div key={item.id} className="flex justify-between mb-1">
-          <span className="w-1/3 truncate">{item.product.name}</span>
-          <span className="w-1/6 text-right">{item.quantity}</span>
-          <span className="w-1/4 text-right">
-            ₹{item.product.price.toFixed(2)}
+          <span className="w-1/3 ">{item.product.name}</span>
+          <span className="w-1/6 text-left">{item.quantity}</span>
+          <span className="w-1/4 text-left">
+            {item.product.price.toFixed(2)}
           </span>
+          <span className="w-1/4 text-left">{item.price.toFixed(2)}</span>
           <span className="w-1/4 text-right">
-            ₹{(item.quantity * item.product.price).toFixed(2)}
+            ₹{(item.quantity * item.price).toFixed(2)}
           </span>
         </div>
       ))}
