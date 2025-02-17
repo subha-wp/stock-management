@@ -20,7 +20,7 @@ interface QRPopupProps {
 export function QRPopup({ amount, upiId }: QRPopupProps) {
   const [open, setOpen] = useState(false);
 
-  const upiLink = `upi://pay?pa=${upiId}&am=${amount}&cu=INR`;
+  const upiLink = `upi://pay?pa=${upiId}&pn=Ramdhanu Garments&am=${amount}&cu=INR`;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

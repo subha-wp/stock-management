@@ -13,8 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { Invoice } from "@/types";
 
 export function InvoiceWeb({ invoice }: { invoice: Invoice }) {
-  console.log("invoice data", invoice);
-
   return (
     <Card className="w-full max-w-4xl mx-auto my-4 p-8 bg-white shadow-lg">
       <CardHeader className="flex flex-row justify-between items-start pb-3 px-0">

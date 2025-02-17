@@ -228,7 +228,7 @@ export function DocumentForm({
               ₹{total}
             </span>
           </p>
-          <QRPopup amount={total} />
+          <QRPopup amount={total} upiId="q673666273@ybl" />
         </div>
         <Card>
           <CardHeader>
