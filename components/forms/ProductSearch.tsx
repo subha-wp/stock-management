@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
@@ -57,19 +58,20 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
     setSearch(""); // Clear search after selection
     setProducts([]); // Clear products list
   };
-  console.log("product list", products);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => setOpen(true)}
-        className="w-full justify-start text-left font-normal"
-      >
-        <Search className="h-4 w-4 mr-2" />
-        Search products...
-      </Button>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setOpen(true)}
+          className="w-full justify-start text-left font-normal"
+        >
+          <Search className="h-4 w-4 mr-2" />
+          Search products...
+        </Button>
+      </DialogTrigger>
       <DialogContent className="p-0 max-w-[90vw] md:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="sr-only">Search Products</DialogTitle>
@@ -119,15 +121,20 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
                       {product.description}
                     </p>
                   )}
-                  <div className="text-xs text-muted-foreground mt-1">
-                    <span>Tax: {product.taxPercent}%</span>
-                    <span className="mx-2">•</span>
+                  <div className="flex justify-between items-center text-xs text-muted-foreground mt-1">
+                    <div>
+                      <span>Unit: {product.unit}</span>
+                      <span className="mx-2">•</span>
+                      <span>Tax: {product.taxPercent}%</span>
+                    </div>
                     <span
                       className={
-                        product.stock <= 1 ? "text-red-500" : "text-green-500"
+                        product.stock <= product.minStock
+                          ? "text-red-500"
+                          : "text-green-500"
                       }
                     >
-                      Available: {product.stock}
+                      Stock: {product.stock}
                     </span>
                   </div>
                 </div>
