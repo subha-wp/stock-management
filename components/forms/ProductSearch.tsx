@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Command } from "cmdk";
 import { Product } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -10,29 +11,46 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Search } from "lucide-react";
+import { toast } from "sonner";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 interface ProductSearchProps {
   products: Product[];
   onSelect: (product: Product) => void;
 }
 
-export function ProductSearch({ products = [], onSelect }: ProductSearchProps) {
+export function ProductSearch({ onSelect }: ProductSearchProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const fetchProducts = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setProducts([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `/api/products?search=${encodeURIComponent(query)}&limit=10`
+      );
+      if (!response.ok) throw new Error("Failed to fetch products");
+      const data = await response.json();
+      setProducts(data.products);
+    } catch (error) {
+      toast.error("Failed to search products");
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (search.trim() && Array.isArray(products)) {
-      const filtered = products.filter(
-        (product) =>
-          product.name.toLowerCase().includes(search.toLowerCase()) ||
-          product.description?.toLowerCase().includes(search.toLowerCase())
-      );
-      setFilteredProducts(filtered);
-    } else {
-      setFilteredProducts(products); // Show all products when search is empty
-    }
-  }, [search, products]);
+    fetchProducts(debouncedSearch);
+  }, [debouncedSearch, fetchProducts]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -63,12 +81,22 @@ export function ProductSearch({ products = [], onSelect }: ProductSearchProps) {
             />
           </div>
           <Command.List className="max-h-[300px] overflow-y-auto">
-            {filteredProducts.length === 0 && (
-              <Command.Empty className="p-2 text-center">
+            {loading && (
+              <div className="p-4 text-sm text-center text-muted-foreground">
+                Searching...
+              </div>
+            )}
+            {!loading && products.length === 0 && search && (
+              <Command.Empty className="p-4 text-sm text-center text-muted-foreground">
                 No products found.
               </Command.Empty>
             )}
-            {filteredProducts.map((product) => (
+            {!loading && !search && (
+              <div className="p-4 text-sm text-center text-muted-foreground">
+                Start typing to search products...
+              </div>
+            )}
+            {products.map((product) => (
               <Command.Item
                 key={product.id}
                 onSelect={() => {
@@ -95,7 +123,7 @@ export function ProductSearch({ products = [], onSelect }: ProductSearchProps) {
                         product.stock <= 1 ? "text-red-500" : "text-green-500"
                       }
                     >
-                      Avaiable: {product.stock}
+                      Available: {product.stock}
                     </span>
                   </div>
                 </div>
