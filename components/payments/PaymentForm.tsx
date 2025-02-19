@@ -90,7 +90,7 @@ export function PaymentForm({
           id="amount"
           type="number"
           step="0.01"
-          value={amount}
+          value={remainingBalance}
           onChange={(e) => setAmount(e.target.value)}
           required
           max={remainingBalance}

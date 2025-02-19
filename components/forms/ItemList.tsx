@@ -1,12 +1,16 @@
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Product } from "@/types";
-import { Trash2 } from "lucide-react";
 import { ProductSearch } from "./ProductSearch";
 
 interface ItemListProps {
-  items: Array<{ productId: string; quantity: number; price?: number }>;
-  products: Product[];
+  items: Array<{
+    productId: string;
+    quantity: number;
+    price: number;
+    product?: Product;
+  }>;
   onAddItem: () => void;
   onRemoveItem: (index: number) => void;
   onUpdateItem: (index: number, field: string, value: string | number) => void;
@@ -14,28 +18,21 @@ interface ItemListProps {
 
 export function ItemList({
   items,
-  products,
   onAddItem,
   onRemoveItem,
   onUpdateItem,
 }: ItemListProps) {
-  const getProductById = (productId: string) => {
-    return products.find((p) => p.id === productId);
-  };
-
   const calculateItemTotal = (item: {
     productId: string;
     quantity: number;
-    price?: number;
+    price: number;
+    product?: Product;
   }) => {
-    const product = getProductById(item.productId);
-    if (!product) return 0;
-    const price = item.price ?? product.price;
-    const subtotal = price * item.quantity;
-    const tax = (subtotal * product.taxPercent) / 100;
+    if (!item.product) return 0;
+    const subtotal = item.price * item.quantity;
+    const tax = (subtotal * item.product.taxPercent) / 100;
     return subtotal + tax;
   };
-  console.log("invoice list", items);
 
   return (
     <div className="space-y-4">
@@ -44,27 +41,19 @@ export function ItemList({
           <div className="flex gap-2 items-start">
             <div className="flex-1">
               <ProductSearch
-                products={products}
                 onSelect={(product) =>
                   onUpdateItem(index, "productId", product.id)
                 }
               />
-              {item.productId && (
+              {item.product && (
                 <div className="mt-2 space-y-1">
                   <div className="text-sm">
-                    <span className="font-medium">
-                      {getProductById(item.productId)?.name}
-                    </span>
+                    <span className="font-medium">{item.product.name}</span>
                     <span className="mx-2">•</span>
-                    <span>
-                      Base Price: ₹
-                      {getProductById(item.productId)?.price.toFixed(2)}
-                    </span>
+                    <span>Base Price: ₹{item.product.price.toFixed(2)}</span>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    <span>
-                      Tax: {getProductById(item.productId)?.taxPercent}%
-                    </span>
+                    <span>Tax: {item.product.taxPercent}%</span>
                   </div>
                 </div>
               )}
@@ -101,11 +90,11 @@ export function ItemList({
                 size="icon"
                 onClick={() => onRemoveItem(index)}
               >
-                <Trash2 className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
-          {item.productId && (
+          {item.product && (
             <div className="text-sm text-right text-muted-foreground">
               Total (inc. tax): ₹{calculateItemTotal(item).toFixed(2)}
             </div>

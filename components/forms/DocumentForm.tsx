@@ -48,14 +48,21 @@ export function DocumentForm({
       : ""
   );
   const [businessId, setBusinessId] = useState(initialData?.businessId || "");
-  const [items, setItems] = useState(
+  const [items, setItems] = useState<
+    Array<{
+      productId: string;
+      quantity: number;
+      price: number;
+      product?: Product;
+    }>
+  >(
     initialData?.items?.map((item) => ({
       productId: item.product.id,
       quantity: item.quantity,
-      price: item.product.price,
-    })) || [{ productId: "", quantity: 1, price: 0 }]
+      price: item.price,
+      product: item.product,
+    })) || []
   );
-  const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -68,29 +75,13 @@ export function DocumentForm({
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
 
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const response = await fetch("/api/products");
-        if (!response.ok) throw new Error("Failed to fetch products");
-        const data = await response.json();
-        setProducts(data.products);
-      } catch (err) {
-        setError("Failed to load products. Please try again.");
-        toast.error("Failed to load products");
-      }
-    }
-    fetchProducts();
-  }, []);
-
   // Calculate total amount
   const calculateTotal = () => {
     return items.reduce((total, item) => {
-      const product = products.find((p) => p.id === item.productId);
-      if (!product) return total;
-      const price = item.price ?? product.price;
+      if (!item.product) return total;
+      const price = item.price ?? item.product.price;
       const subtotal = price * item.quantity;
-      const tax = (subtotal * product.taxPercent) / 100;
+      const tax = (subtotal * item.product.taxPercent) / 100;
       return total + subtotal + tax;
     }, 0);
   };
@@ -119,7 +110,11 @@ export function DocumentForm({
       const invoiceData = {
         date,
         [type === "invoice" ? "dueDate" : "expiryDate"]: endDate,
-        items,
+        items: items.map(({ productId, quantity, price }) => ({
+          productId,
+          quantity,
+          price,
+        })),
         businessId,
         status: initialData?.status || "PENDING",
         payment: includePayment
@@ -159,9 +154,28 @@ export function DocumentForm({
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const updateItem = (index: number, field: string, value: string | number) => {
+  const updateItem = async (
+    index: number,
+    field: string,
+    value: string | number
+  ) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
+
+    // If the field is productId, fetch the product details
+    if (field === "productId") {
+      try {
+        const response = await fetch(`/api/products/${value}`);
+        if (!response.ok) throw new Error("Failed to fetch product");
+        const product = await response.json();
+        newItems[index].product = product;
+        newItems[index].price = product.price; // Set initial price to product's price
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        toast.error("Failed to fetch product details");
+      }
+    }
+
     setItems(newItems);
   };
 
@@ -215,7 +229,6 @@ export function DocumentForm({
           <Label>Items</Label>
           <ItemList
             items={items}
-            products={products}
             onAddItem={addItem}
             onRemoveItem={removeItem}
             onUpdateItem={updateItem}
