@@ -35,6 +35,7 @@ export function ItemList({
     const tax = (subtotal * product.taxPercent) / 100;
     return subtotal + tax;
   };
+  console.log("invoice list", items);
 
   return (
     <div className="space-y-4">

@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
 interface ProductSearchProps {
-  products: Product[];
   onSelect: (product: Product) => void;
 }
 
@@ -51,6 +50,14 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
   useEffect(() => {
     fetchProducts(debouncedSearch);
   }, [debouncedSearch, fetchProducts]);
+
+  const handleProductSelect = (product: Product) => {
+    onSelect(product);
+    setOpen(false);
+    setSearch(""); // Clear search after selection
+    setProducts([]); // Clear products list
+  };
+  console.log("product list", products);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -99,10 +106,7 @@ export function ProductSearch({ onSelect }: ProductSearchProps) {
             {products.map((product) => (
               <Command.Item
                 key={product.id}
-                onSelect={() => {
-                  onSelect(product);
-                  setOpen(false);
-                }}
+                onSelect={() => handleProductSelect(product)}
                 className="px-4 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer"
               >
                 <div className="flex flex-col w-full">
