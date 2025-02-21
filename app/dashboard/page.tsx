@@ -209,7 +209,7 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {stats.recentInvoices.map((invoice) => (
+                {stats.recentInvoices.slice(0, 10).map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell>
                       <Link
