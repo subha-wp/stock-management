@@ -9,16 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
-import { DateRange } from "react-day-picker";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import {
   Table,
   TableBody,
@@ -28,7 +18,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  CalendarIcon,
   TrendingUp,
   DollarSign,
   CreditCard,
@@ -37,10 +26,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Invoice, Product } from "@/types";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface DashboardStats {
   totalSales: number;
@@ -54,8 +43,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [period, setPeriod] = useState("today");
+  const [period, setPeriod] = useState("7days");
   const [stats, setStats] = useState<DashboardStats>({
     totalSales: 0,
     totalCredit: 0,
@@ -71,47 +59,20 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        // Fetch invoices
-        const invoicesResponse = await fetch("/api/invoices?limit=5");
-        const invoicesData = await invoicesResponse.json();
-
-        // Fetch low stock alerts
-        const stockResponse = await fetch("/api/stock/alerts");
-        const lowStockProducts = await stockResponse.json();
-
-        // Calculate total sales and credit
-        const totalSales = invoicesData.invoices.reduce(
-          (sum: number, invoice: Invoice) => sum + invoice.total,
-          0
-        );
-        const totalCredit = invoicesData.invoices.reduce(
-          (sum: number, invoice: Invoice) =>
-            sum + (invoice.total - invoice.amountPaid),
-          0
-        );
-
-        setStats({
-          totalSales,
-          totalCredit,
-          totalProducts: lowStockProducts.length,
-          pendingInvoices: invoicesData.invoices.filter(
-            (invoice: Invoice) =>
-              invoice.status === "PENDING" || invoice.status === "OVERDUE"
-          ).length,
-          recentInvoices: invoicesData.invoices,
-          lowStockProducts,
-          salesTrend: 12.5, // Example trend percentage
-          creditTrend: -5.2, // Example trend percentage
-        });
+        const response = await fetch(`/api/dashboard?period=${period}`);
+        if (!response.ok) throw new Error("Failed to fetch dashboard data");
+        const data = await response.json();
+        setStats(data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
+        toast.error("Failed to fetch dashboard data");
       } finally {
         setLoading(false);
       }
     }
 
     fetchDashboardData();
-  }, [period, dateRange]);
+  }, [period]);
 
   if (loading) {
     return (
@@ -125,53 +86,17 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Dashboard Overview</h1>
-        <div className="flex gap-4">
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="yesterday">Yesterday</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="year">This Year</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "LLL dd, y")} -{" "}
-                      {format(dateRange.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "LLL dd, y")
-                  )
-                ) : (
-                  "Date Range"
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Select Date Range</SheetTitle>
-              </SheetHeader>
-              <div className="py-4">
-                <Calendar
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  numberOfMonths={2}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
+        <Select value={period} onValueChange={setPeriod}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select period" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="7days">Last 7 Days</SelectItem>
+            <SelectItem value="30days">Last 30 Days</SelectItem>
+            <SelectItem value="all">All Time</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -199,9 +124,9 @@ export default function DashboardPage() {
                   stats.salesTrend >= 0 ? "text-green-500" : "text-red-500"
                 }
               >
-                {Math.abs(stats.salesTrend)}%
+                {Math.abs(stats.salesTrend).toFixed(1)}%
               </span>
-              <span className="ml-1">from last month</span>
+              <span className="ml-1">from last period</span>
             </div>
           </CardContent>
         </Card>
@@ -230,9 +155,9 @@ export default function DashboardPage() {
                   stats.creditTrend >= 0 ? "text-green-500" : "text-red-500"
                 }
               >
-                {Math.abs(stats.creditTrend)}%
+                {Math.abs(stats.creditTrend).toFixed(1)}%
               </span>
-              <span className="ml-1">from last month</span>
+              <span className="ml-1">from last period</span>
             </div>
           </CardContent>
         </Card>

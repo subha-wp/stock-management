@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/invoice-pdf";
+import { format, formatDate } from "date-fns";
 
 const statusColors = {
   PENDING: "default",
@@ -109,10 +110,18 @@ export default function InvoicesPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {new Date(invoice.date).toLocaleDateString()}
+                  {new Date(invoice.date).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
                 </TableCell>
                 <TableCell>
-                  {new Date(invoice.dueDate).toLocaleDateString()}
+                  {new Date(invoice.dueDate).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
                 </TableCell>
                 <TableCell>
                   <div>
