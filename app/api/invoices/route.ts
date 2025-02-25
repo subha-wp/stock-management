@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       dueDate,
       items,
       businessId,
-      status = "PENDING",
+      status = "NOT-PAID",
       payment = null,
     } = await request.json();
 

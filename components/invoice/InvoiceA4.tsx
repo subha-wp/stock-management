@@ -46,8 +46,14 @@ export function InvoiceA4({ invoice }: { invoice: Invoice }) {
             #{invoice.number}
           </p>
           <div className="space-y-1 text-sm">
-            <p>Date: {new Date(invoice.date).toLocaleDateString()}</p>
-            <p>Due Date: {new Date(invoice.dueDate).toLocaleDateString()}</p>
+            <p>
+              Date:{" "}
+              {new Date(invoice.date).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}
+            </p>
             <p>Status: {invoice.status}</p>
           </div>
         </div>

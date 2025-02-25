@@ -11,7 +11,14 @@ export function InvoiceThermal({ invoice }: { invoice: Invoice }) {
 
       <div className="mb-2">
         <p>Invoice: #{invoice.number}</p>
-        <p>Date: {new Date(invoice.date).toLocaleDateString()}</p>
+        <p>
+          Date:{" "}
+          {new Date(invoice.date).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
+        </p>
         <p>Customer: {invoice.client?.name}</p>
       </div>
 
@@ -58,7 +65,7 @@ export function InvoiceThermal({ invoice }: { invoice: Invoice }) {
         <div className="mt-2 text-center">
           <p className="font-bold">Payment Details</p>
           <p>{invoice.business.bankName}</p>
-          <p>Acc: {invoice.business.accountNo}</p>
+          <p>Ac.No: {invoice.business.accountNo}</p>
           <p>IFSC: {invoice.business.ifscCode}</p>
           {invoice.business.upiId && <p>UPI: {invoice.business.upiId}</p>}
         </div>
