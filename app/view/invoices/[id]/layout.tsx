@@ -10,11 +10,11 @@ export default async function layout({
 }) {
   const { user } = await validateRequest();
   return (
-    <div className="p-4">
+    <div className="p-4 print:p-0">
       {user && (
         <Link
           href="/dashboard/invoices"
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-2 print:hidden"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to invoices

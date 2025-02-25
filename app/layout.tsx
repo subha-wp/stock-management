@@ -22,7 +22,7 @@ export default function RootLayout({
         <div className="min-h-screen bg-background relative">
           {children}
           <Toaster />
-          <div className="absolute bottom-2 right-6">
+          <div className="absolute bottom-2 right-6 print:hidden">
             <small>
               Made with ❤️ By{" "}
               <Link href="https://www.nextcoder.co.in">nextCoder</Link>

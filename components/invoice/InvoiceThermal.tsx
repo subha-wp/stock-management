@@ -2,7 +2,7 @@ import type { Invoice } from "@/types";
 
 export function InvoiceThermal({ invoice }: { invoice: Invoice }) {
   return (
-    <div className="w-[58mm] font-mono text-[10px] leading-tight p-2 bg-white">
+    <div className="w-[58mm] font-mono text-[10px]  max-h-fit leading-tight p-2 bg-white">
       <div className="text-center mb-2">
         <h1 className="font-bold text-[12px]">{invoice.business?.name}</h1>
         <p>{invoice.business?.address}</p>

@@ -48,7 +48,7 @@ export default function PublicInvoiceView() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 print:p-0">
       <div>
         <InvoicePreview invoice={invoice} />
       </div>
