@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import Link from "next/link";
@@ -18,12 +19,17 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageSquare,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Client } from "@/types";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function ClientsPage() {
   const { clients, loading, pagination, search, setSearch, page, setPage } =
     useClients();
+  const [copiedClientId, setCopiedClientId] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -33,23 +39,46 @@ export default function ClientsPage() {
     );
   }
 
+  const generateWhatsAppMessage = (client: Client) => {
+    return `প্রিয় ${client.name},
+
+*Ramdhanu Garments* থেকে বলছি। আপনার বকেয়া পরিমাণ ${client.totalCredit.toFixed(
+      2
+    )} টাকা এখনো পরিশোধ করা হয়নি। *অনুগ্রহ করে আপনার বকেয়া পরিশোধ করুন যাতে আমাদের পরিষেবা অব্যাহত রাখা যায়।*
+
+আপনি সহজেই এই লিঙ্কের মাধ্যমে পেমেন্ট করতে পারেন:
+ Pay Now: https://upi.me/pay?pa=q673666273@ybl&pn=&mc=0000&tid=123456789&tr=TXN12345678&tn=Payment&am=${client.totalCredit.toFixed(
+   2
+ )}&cu=INR
+
+যদি ইতিমধ্যে পেমেন্ট করে থাকেন, দয়া করে আমাদের জানাবেন। ধন্যবাদ।
+
+*Ramdhanu Garments*`;
+  };
+
   const generateWhatsAppLink = (client: Client) => {
-    let phoneNumber = client.phone.replace(/\D/g, ""); // Remove non-digit characters
+    const phoneNumber = client.phone.startsWith("+")
+      ? client.phone.substring(1)
+      : client.phone;
 
-    // Ensure phone number starts with country code +91
-    if (!phoneNumber.startsWith("91")) {
-      phoneNumber = "91" + phoneNumber.replace(/^0+/, ""); // Remove leading zeros
+    return `https://wa.me/+91${phoneNumber}?text=`;
+  };
+
+  const copyMessageToClipboard = async (client: Client) => {
+    const message = generateWhatsAppMessage(client);
+
+    try {
+      await navigator.clipboard.writeText(message);
+      setCopiedClientId(client.id);
+      toast.success("Message copied to clipboard");
+
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedClientId(null);
+      }, 2000);
+    } catch (err) {
+      toast.error("Failed to copy message");
     }
-
-    const message = `প্রিয় ${
-      client.name
-    },\n\n*Ramdhanu Garments* থেকে বলছি। আপনার বকেয়া পরিমাণ ${client.totalCredit.toFixed(
-      2
-    )} টাকা এখনো পরিশোধ করা হয়নি। *অনুগ্রহ করে আপনার বকেয়া পরিশোধ করুন যাতে আমাদের পরিষেবা অব্যাহত রাখা যায়।*\n\nআপনি সহজেই এই লিঙ্কের মাধ্যমে পেমেন্ট করতে পারেন:\nPay Now: https://upi.me/pay?pa=q673666273@ybl&pn=&mc=0000&tid=123456789&tr=TXN12345678&tn=Payment&am=${client.totalCredit.toFixed(
-      2
-    )}&cu=INR\n\nযদি ইতিমধ্যে পেমেন্ট করে থাকেন, দয়া করে আমাদের জানাবেন। ধন্যবাদ।\n\n*Ramdhanu Garments*`;
-
-    return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
   };
 
   return (
@@ -95,7 +124,7 @@ export default function ClientsPage() {
                   <div className="flex gap-2">
                     <Button asChild size="sm">
                       <Link href={`/dashboard/clients/${client.id}`}>
-                        <FileText className="h-4 w-4 mr-2" />
+                        <FileText className="h-4 w-4" />
                         View
                       </Link>
                     </Button>
@@ -105,10 +134,31 @@ export default function ClientsPage() {
                       className="bg-green-500 hover:bg-green-600 text-white"
                       asChild
                     >
-                      <a href={generateWhatsAppLink(client)} target="_blank">
-                        <MessageSquare className="h-4 w-4 mr-2" />
+                      <a
+                        href={generateWhatsAppLink(client)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageSquare className="h-4 w-4" />
                         WhatsApp
                       </a>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => copyMessageToClipboard(client)}
+                    >
+                      {copiedClientId === client.id ? (
+                        <>
+                          <Check className="h-4 w-4" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Message
+                        </>
+                      )}
                     </Button>
                   </div>
                 </TableCell>
