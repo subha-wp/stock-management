@@ -12,7 +12,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useClients } from "@/lib/hooks/useClients";
-import { Search, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  MessageSquare,
+} from "lucide-react";
+import { Client } from "@/types";
 
 export default function ClientsPage() {
   const { clients, loading, pagination, search, setSearch, page, setPage } =
@@ -25,6 +32,31 @@ export default function ClientsPage() {
       </div>
     );
   }
+
+  const generateWhatsAppLink = (client: Client) => {
+    const phoneNumber = client.phone.startsWith("+")
+      ? client.phone.substring(1)
+      : client.phone;
+
+    const message = `প্রিয় ${client.name},
+
+আমরা "Ramdhanu Garments" থেকে বলছি। আপনার বকেয়া পরিমাণ ${client.totalCredit.toFixed(
+      2
+    )} টাকা এখনো পরিশোধ করা হয়নি। অনুগ্রহ করে আপনার বকেয়া পরিশোধ করুন যাতে আমাদের পরিষেবা অব্যাহত রাখা যায়।
+
+আপনি সহজেই এই লিঙ্কের মাধ্যমে পেমেন্ট করতে পারেন:
+ Pay Now: https://upi.me/pay?pa=q673666273@ybl&pn=&mc=0000&tid=123456789&tr=TXN12345678&tn=Payment&am=${client.totalCredit.toFixed(
+   2
+ )}&cu=INR
+
+যদি ইতিমধ্যে পেমেন্ট করে থাকেন, দয়া করে আমাদের জানাবেন। ধন্যবাদ।
+
+Ramdhanu Garments`;
+
+    return `https://wa.me/+91${phoneNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+  };
 
   return (
     <div className="container mx-auto px-4 pb-20">
@@ -66,12 +98,29 @@ export default function ClientsPage() {
                 <TableCell>{client.address || "-"}</TableCell>
                 <TableCell>₹{client.totalCredit.toFixed(2)}</TableCell>
                 <TableCell>
-                  <Button asChild size="sm">
-                    <Link href={`/dashboard/clients/${client.id}`}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      View
-                    </Link>
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button asChild size="sm">
+                      <Link href={`/dashboard/clients/${client.id}`}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        View
+                      </Link>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-green-500 hover:bg-green-600 text-white"
+                      asChild
+                    >
+                      <a
+                        href={generateWhatsAppLink(client)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        WhatsApp
+                      </a>
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
