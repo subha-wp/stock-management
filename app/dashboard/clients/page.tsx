@@ -40,9 +40,9 @@ export default function ClientsPage() {
 
     const message = `প্রিয় ${client.name},
 
-আমরা "Ramdhanu Garments" থেকে বলছি। আপনার বকেয়া পরিমাণ ${client.totalCredit.toFixed(
+*Ramdhanu Garments* থেকে বলছি। আপনার বকেয়া পরিমাণ ${client.totalCredit.toFixed(
       2
-    )} টাকা এখনো পরিশোধ করা হয়নি। অনুগ্রহ করে আপনার বকেয়া পরিশোধ করুন যাতে আমাদের পরিষেবা অব্যাহত রাখা যায়।
+    )} টাকা এখনো পরিশোধ করা হয়নি। *অনুগ্রহ করে আপনার বকেয়া পরিশোধ করুন যাতে আমাদের পরিষেবা অব্যাহত রাখা যায়।*
 
 আপনি সহজেই এই লিঙ্কের মাধ্যমে পেমেন্ট করতে পারেন:
  Pay Now: https://upi.me/pay?pa=q673666273@ybl&pn=&mc=0000&tid=123456789&tr=TXN12345678&tn=Payment&am=${client.totalCredit.toFixed(
@@ -51,11 +51,9 @@ export default function ClientsPage() {
 
 যদি ইতিমধ্যে পেমেন্ট করে থাকেন, দয়া করে আমাদের জানাবেন। ধন্যবাদ।
 
-Ramdhanu Garments`;
+*Ramdhanu Garments*`;
 
-    return `https://wa.me/+91${phoneNumber}?text=${encodeURIComponent(
-      message
-    )}`;
+    return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
   };
 
   return (
