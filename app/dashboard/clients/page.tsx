@@ -34,24 +34,20 @@ export default function ClientsPage() {
   }
 
   const generateWhatsAppLink = (client: Client) => {
-    const phoneNumber = client.phone.startsWith("+")
-      ? client.phone.substring(1)
-      : client.phone;
+    let phoneNumber = client.phone.replace(/\D/g, ""); // Remove non-digit characters
 
-    const message = `প্রিয় ${client.name},
+    // Ensure phone number starts with country code +91
+    if (!phoneNumber.startsWith("91")) {
+      phoneNumber = "91" + phoneNumber.replace(/^0+/, ""); // Remove leading zeros
+    }
 
-*Ramdhanu Garments* থেকে বলছি। আপনার বকেয়া পরিমাণ ${client.totalCredit.toFixed(
+    const message = `প্রিয় ${
+      client.name
+    },\n\n*Ramdhanu Garments* থেকে বলছি। আপনার বকেয়া পরিমাণ ${client.totalCredit.toFixed(
       2
-    )} টাকা এখনো পরিশোধ করা হয়নি। *অনুগ্রহ করে আপনার বকেয়া পরিশোধ করুন যাতে আমাদের পরিষেবা অব্যাহত রাখা যায়।*
-
-আপনি সহজেই এই লিঙ্কের মাধ্যমে পেমেন্ট করতে পারেন:
- Pay Now: https://upi.me/pay?pa=q673666273@ybl&pn=&mc=0000&tid=123456789&tr=TXN12345678&tn=Payment&am=${client.totalCredit.toFixed(
-   2
- )}&cu=INR
-
-যদি ইতিমধ্যে পেমেন্ট করে থাকেন, দয়া করে আমাদের জানাবেন। ধন্যবাদ।
-
-*Ramdhanu Garments*`;
+    )} টাকা এখনো পরিশোধ করা হয়নি। *অনুগ্রহ করে আপনার বকেয়া পরিশোধ করুন যাতে আমাদের পরিষেবা অব্যাহত রাখা যায়।*\n\nআপনি সহজেই এই লিঙ্কের মাধ্যমে পেমেন্ট করতে পারেন:\nPay Now: https://upi.me/pay?pa=q673666273@ybl&pn=&mc=0000&tid=123456789&tr=TXN12345678&tn=Payment&am=${client.totalCredit.toFixed(
+      2
+    )}&cu=INR\n\nযদি ইতিমধ্যে পেমেন্ট করে থাকেন, দয়া করে আমাদের জানাবেন। ধন্যবাদ।\n\n*Ramdhanu Garments*`;
 
     return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
   };
@@ -109,11 +105,7 @@ export default function ClientsPage() {
                       className="bg-green-500 hover:bg-green-600 text-white"
                       asChild
                     >
-                      <a
-                        href={generateWhatsAppLink(client)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <a href={generateWhatsAppLink(client)} target="_blank">
                         <MessageSquare className="h-4 w-4 mr-2" />
                         WhatsApp
                       </a>
