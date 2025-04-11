@@ -2,8 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 //@ts-nocheck
 "use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -121,12 +119,15 @@ export default function ExpensesPage() {
             className="pl-10"
           />
         </div>
-        <Select value={category} onValueChange={setCategory}>
+        <Select
+          value={category}
+          onValueChange={(value) => setCategory(value === "all" ? "" : value)}
+        >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {EXPENSE_CATEGORIES.map((cat) => (
               <SelectItem key={cat} value={cat}>
                 {cat}

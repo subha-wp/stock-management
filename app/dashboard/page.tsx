@@ -27,7 +27,7 @@ import {
   ArrowDownRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Invoice, Product } from "@/types";
+import type { Invoice, Product, Expense } from "@/types";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -36,10 +36,15 @@ interface DashboardStats {
   totalCredit: number;
   totalProducts: number;
   pendingInvoices: number;
+  totalExpenses: number;
+  profitLoss: number;
   recentInvoices: Invoice[];
+  recentExpenses: Expense[];
   lowStockProducts: Product[];
   salesTrend: number;
   creditTrend: number;
+  expenseTrend: number;
+  profitLossTrend: number;
 }
 
 export default function DashboardPage() {
@@ -49,10 +54,15 @@ export default function DashboardPage() {
     totalCredit: 0,
     totalProducts: 0,
     pendingInvoices: 0,
+    totalExpenses: 0,
+    profitLoss: 0,
     recentInvoices: [],
+    recentExpenses: [],
     lowStockProducts: [],
     salesTrend: 0,
     creditTrend: 0,
+    expenseTrend: 0,
+    profitLossTrend: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -165,6 +175,77 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
+              Total Expenses
+            </CardTitle>
+            <DollarSign
+              className={`h-4 w-4 ${
+                stats.expenseTrend <= 0 ? "text-green-500" : "text-red-500"
+              }`}
+            />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ₹{stats.totalExpenses.toLocaleString()}
+            </div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              {stats.expenseTrend <= 0 ? (
+                <ArrowDownRight className="h-4 w-4 text-green-500" />
+              ) : (
+                <ArrowUpRight className="h-4 w-4 text-red-500" />
+              )}
+              <span
+                className={
+                  stats.expenseTrend <= 0 ? "text-green-500" : "text-red-500"
+                }
+              >
+                {Math.abs(stats.expenseTrend).toFixed(1)}%
+              </span>
+              <span className="ml-1">from last period</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Profit & Loss</CardTitle>
+            <TrendingUp
+              className={`h-4 w-4 ${
+                stats.profitLoss >= 0 ? "text-green-500" : "text-red-500"
+              }`}
+            />
+          </CardHeader>
+          <CardContent>
+            <div
+              className={`text-2xl font-bold ${
+                stats.profitLoss >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              ₹{Math.abs(stats.profitLoss)}
+              <span className="text-sm ml-1">
+                {stats.profitLoss >= 0 ? "Profit" : "Loss"}
+              </span>
+            </div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              {stats.profitLossTrend >= 0 ? (
+                <ArrowUpRight className="h-4 w-4 text-green-500" />
+              ) : (
+                <ArrowDownRight className="h-4 w-4 text-red-500" />
+              )}
+              <span
+                className={
+                  stats.profitLossTrend >= 0 ? "text-green-500" : "text-red-500"
+                }
+              >
+                {Math.abs(stats.profitLossTrend).toFixed(1)}%
+              </span>
+              <span className="ml-1">from last period</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">
               Low Stock Products
             </CardTitle>
             <Package2 className="h-4 w-4 text-muted-foreground" />
@@ -238,6 +319,45 @@ export default function DashboardPage() {
                     </TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Expenses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Payment Mode</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stats.recentExpenses.slice(0, 5).map((expense) => (
+                  <TableRow key={expense.id}>
+                    <TableCell>
+                      {new Date(expense.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{expense.category}</TableCell>
+                    <TableCell>{expense.description || "-"}</TableCell>
+                    <TableCell>₹{expense.amount.toLocaleString()}</TableCell>
+                    <TableCell>{expense.paymentMode}</TableCell>
+                  </TableRow>
+                ))}
+                {stats.recentExpenses.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-4">
+                      No recent expenses found
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

@@ -83,6 +83,48 @@ export async function GET(request: Request) {
       },
     });
 
+    // Get expenses for the period
+    const expenses = await prisma.expense.findMany({
+      where: {
+        userId: user.id,
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: {
+        date: "desc",
+      },
+    });
+
+    // Get previous period expenses for trend comparison
+    const previousPeriodExpenses = await prisma.expense.findMany({
+      where: {
+        userId: user.id,
+        date: {
+          gte: previousStartDate,
+          lte: previousEndDate,
+        },
+      },
+    });
+
+    // Calculate total expenses
+    const totalExpenses = expenses.reduce(
+      (sum, expense) => sum + expense.amount,
+      0
+    );
+    const previousTotalExpenses = previousPeriodExpenses.reduce(
+      (sum, expense) => sum + expense.amount,
+      0
+    );
+
+    // Calculate expense trend
+    const expenseTrend =
+      previousTotalExpenses === 0
+        ? 100
+        : ((totalExpenses - previousTotalExpenses) / previousTotalExpenses) *
+          100;
+
     // Calculate totals
     const totalSales = invoices.reduce(
       (sum, invoice) => sum + invoice.total,
@@ -113,6 +155,17 @@ export async function GET(request: Request) {
         ? 100
         : ((totalCredit - previousTotalCredit) / previousTotalCredit) * 100;
 
+    // Calculate profit/loss (total sales - total expenses)
+    const profitLoss = totalSales - totalExpenses;
+    const previousProfitLoss = previousTotalSales - previousTotalExpenses;
+
+    // Calculate profit/loss trend
+    const profitLossTrend =
+      previousProfitLoss === 0
+        ? 100
+        : ((profitLoss - previousProfitLoss) / Math.abs(previousProfitLoss)) *
+          100;
+
     return NextResponse.json({
       totalSales,
       totalCredit,
@@ -121,10 +174,15 @@ export async function GET(request: Request) {
         (invoice) =>
           invoice.status === "PENDING" || invoice.status === "OVERDUE"
       ).length,
+      totalExpenses,
+      profitLoss,
       recentInvoices: invoices,
+      recentExpenses: expenses,
       lowStockProducts,
       salesTrend,
       creditTrend,
+      expenseTrend,
+      profitLossTrend,
     });
   } catch (error) {
     console.error("Dashboard error:", error);
