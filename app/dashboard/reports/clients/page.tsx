@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -10,128 +11,163 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { useClients } from "@/lib/hooks/useClients";
 import { format } from "date-fns";
+import { toast } from "sonner";
+
+interface BusinessCredit {
+  business: string;
+  total: number;
+  paid: number;
+  credit: number;
+}
+
+interface ClientReport {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  address: string | null;
+  businessOwner: string;
+  totalCredit: number;
+  businessCredits: BusinessCredit[];
+  lastInvoiceDate: string | null;
+}
 
 export default function ClientReportsPage() {
-  const { clients, loading, search, setSearch } = useClients();
+  const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [clients, setClients] = useState<ClientReport[]>([]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const searchClients = async () => {
+    if (!phone) {
+      toast.error("Please enter a phone number");
+      return;
+    }
 
-  // Sort clients by total credit in descending order
-  const sortedClients = [...clients].sort(
-    (a, b) => b.totalCredit - a.totalCredit
-  );
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `/api/reports/clients/search?phone=${encodeURIComponent(phone)}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch client data");
+      const data = await response.json();
+      setClients(data);
+    } catch (error) {
+      console.error("Search error:", error);
+      toast.error("Failed to fetch client data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const totalCredit = clients.reduce(
+  const totalOutstanding = clients.reduce(
     (sum, client) => sum + client.totalCredit,
     0
   );
-  const averageCredit = totalCredit / clients.length || 0;
-  const highRiskClients = clients.filter(
-    (client) => client.totalCredit > 10000
-  ).length;
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              Total Outstanding
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₹{totalCredit.toFixed(2)}</div>
-          </CardContent>
-        </Card>
+      <div className="mb-8">
+        <div className="flex gap-4 mb-6">
+          <Input
+            placeholder="Enter phone number to search..."
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="max-w-md"
+          />
+          <Button onClick={searchClients} disabled={loading}>
+            <Search className="h-4 w-4 mr-2" />
+            {loading ? "Searching..." : "Search"}
+          </Button>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              Average Credit
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ₹{averageCredit.toFixed(2)}
-            </div>
-          </CardContent>
-        </Card>
+        {clients.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Total Outstanding Across All Businesses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                ₹{totalOutstanding.toFixed(2)}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              High Risk Clients
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{highRiskClients}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Client Credit Report</CardTitle>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Search clients..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Client Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Outstanding Amount</TableHead>
-                <TableHead>Last Invoice Date</TableHead>
-                <TableHead>Risk Level</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedClients.map((client) => {
-                let riskLevel = "Low";
-                let riskColor = "text-green-600";
-
-                if (client.totalCredit > 10000) {
-                  riskLevel = "High";
-                  riskColor = "text-red-600";
-                } else if (client.totalCredit > 5000) {
-                  riskLevel = "Medium";
-                  riskColor = "text-yellow-600";
-                }
-
-                return (
-                  <TableRow key={client.id}>
-                    <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <p>{client.phone}</p>
-                        <p className="text-muted-foreground">{client.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>₹{client.totalCredit.toFixed(2)}</TableCell>
-                    <TableCell>
-                      {format(new Date(client.updatedAt), "dd/MM/yyyy")}
-                    </TableCell>
-                    <TableCell className={riskColor}>{riskLevel}</TableCell>
+        {clients.map((client) => (
+          <Card key={client.id} className="mb-6">
+            <CardHeader>
+              <CardTitle>{client.name}</CardTitle>
+              <div className="text-sm text-muted-foreground">
+                <p>Phone: {client.phone}</p>
+                {client.email && <p>Email: {client.email}</p>}
+                {client.address && <p>Address: {client.address}</p>}
+                <p>Business Owner: {client.businessOwner}</p>
+                {client.lastInvoiceDate && (
+                  <p>
+                    Last Invoice:{" "}
+                    {format(new Date(client.lastInvoiceDate), "dd/MM/yyyy")}
+                  </p>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Business</TableHead>
+                    <TableHead className="text-right">Total Amount</TableHead>
+                    <TableHead className="text-right">Paid Amount</TableHead>
+                    <TableHead className="text-right">Credit Amount</TableHead>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {client.businessCredits.map((credit, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{credit.business}</TableCell>
+                      <TableCell className="text-right">
+                        ₹{credit.total.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        ₹{credit.paid.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        ₹{credit.credit.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-bold">
+                    <TableCell>Total</TableCell>
+                    <TableCell className="text-right">
+                      ₹
+                      {client.businessCredits
+                        .reduce((sum, credit) => sum + credit.total, 0)
+                        .toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      ₹
+                      {client.businessCredits
+                        .reduce((sum, credit) => sum + credit.paid, 0)
+                        .toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      ₹{client.totalCredit.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        ))}
+
+        {clients.length === 0 && phone && !loading && (
+          <div className="text-center text-muted-foreground">
+            No clients found with this phone number
+          </div>
+        )}
+      </div>
     </div>
   );
 }
