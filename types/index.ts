@@ -112,3 +112,16 @@ export interface InvoiceItem {
   product: Product;
   invoiceId: string;
 }
+
+export interface Expense {
+  id: string;
+  date: Date;
+  amount: number;
+  category: string;
+  description?: string;
+  paymentMode: string;
+  reference?: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

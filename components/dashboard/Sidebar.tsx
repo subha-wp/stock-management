@@ -16,6 +16,7 @@ import {
   Users,
   FileBarChart,
   Crown,
+  Receipt,
 } from "lucide-react";
 import type { User as UserType } from "@/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -31,6 +32,7 @@ const menuItems = [
   { icon: Package, label: "Products", href: "/dashboard/products" },
   { icon: FileText, label: "Invoices", href: "/dashboard/invoices" },
   { icon: Users, label: "Customers", href: "/dashboard/clients" },
+  { icon: Receipt, label: "Expenses", href: "/dashboard/expenses" },
   {
     icon: FileBarChart,
     label: "Client Reports",

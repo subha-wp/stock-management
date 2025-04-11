@@ -24,6 +24,7 @@ model User {
   stockLogs  StockLog[]
   payments   Payment[]
   clients    Client[]
+  expenses   Expense[]
 
   sessions Session[]
 }
@@ -61,7 +62,7 @@ model Client {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  @@unique([phone, userId]) // Make phone unique per user instead of globally
+  @@unique([phone, userId])
   @@index([phone])
 }
 
@@ -156,4 +157,18 @@ model InvoiceItem {
   product   Product @relation(fields: [productId], references: [id])
   invoiceId String
   invoice   Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  date        DateTime
+  amount      Float
+  category    String
+  description String?
+  paymentMode String
+  reference   String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
