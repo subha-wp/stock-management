@@ -150,7 +150,7 @@ export default function ClientsPage() {
                     >
                       {copiedClientId === client.id ? (
                         <>
-                          <Check className="h-4 w-4" />
+                          <Check className="h-3 w-3" />
                           Copied!
                         </>
                       ) : (

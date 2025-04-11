@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     const { name, email, phone, address } = await request.json();
 
-    // Check if client already exists
+    // Check if client already exists for this user
     let client = await prisma.client.findFirst({
       where: {
         phone,

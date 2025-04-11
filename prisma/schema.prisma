@@ -8,20 +8,20 @@ generator client {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
+  id             String   @id @default(cuid())
+  email          String   @unique
   hashedPassword String
   name           String?
   avatarUrl      String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   products   Product[]
   invoices   Invoice[]
   businesses Business[]
   stockLogs  StockLog[]
   payments   Payment[]
-  clients    Client[]    // Add relation to clients
+  clients    Client[]
 
   sessions Session[]
 }
@@ -39,105 +39,106 @@ model Client {
   id          String    @id @default(cuid())
   name        String
   email       String?
-  phone       String    @unique  // Make phone unique as it's our lookup field
+  phone       String
   address     String?
-  totalCredit Float     @default(0)  // Track total credit amount
-  userId      String    // Reference to admin/user who created this client
+  totalCredit Float     @default(0)
+  userId      String
   user        User      @relation(fields: [userId], references: [id])
   invoices    Invoice[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  @@unique([phone, userId]) // Make phone unique per user instead of globally
   @@index([phone])
 }
 
 model Business {
-  id          String   @id @default(cuid())
-  name        String
-  address     String?
-  phone       String?
-  email       String?
-  website     String?
-  logoUrl     String?
-  bankName    String?
-  ifscCode    String?
-  accountNo   String?
-  upiId       String?
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  invoices    Invoice[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String    @id @default(cuid())
+  name      String
+  address   String?
+  phone     String?
+  email     String?
+  website   String?
+  logoUrl   String?
+  bankName  String?
+  ifscCode  String?
+  accountNo String?
+  upiId     String?
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  invoices  Invoice[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Product {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  price       Float
-  unit        String    @default("piece")
-  taxPercent  Float     @default(0)
-  stock       Int       @default(0)
-  minStock    Int       @default(0)
-  images      String[]  @default([])
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  price        Float
+  unit         String        @default("piece")
+  taxPercent   Float         @default(0)
+  stock        Int           @default(0)
+  minStock     Int           @default(0)
+  images       String[]      @default([])
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
   invoiceItems InvoiceItem[]
   stockLogs    StockLog[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model StockLog {
-  id          String   @id @default(cuid())
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
-  quantity    Int
-  type        String
-  note        String?
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  type      String
+  note      String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model Invoice {
-  id               String    @id @default(cuid())
-  number           String    @unique
-  clientId         String    // Add relation to Client
-  client           Client    @relation(fields: [clientId], references: [id])
-  date             DateTime  @default(now())
-  dueDate          DateTime
-  status           String    // PENDING, PARTIALLY_PAID, PAID, OVERDUE
-  total            Float
-  amountPaid       Float     @default(0)
-  userId           String
-  businessId       String
-  user             User      @relation(fields: [userId], references: [id])
-  business         Business  @relation(fields: [businessId], references: [id])
-  items            InvoiceItem[]
-  payments         Payment[]
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id         String        @id @default(cuid())
+  number     String        @unique
+  clientId   String
+  client     Client        @relation(fields: [clientId], references: [id])
+  date       DateTime      @default(now())
+  dueDate    DateTime
+  status     String
+  total      Float
+  amountPaid Float         @default(0)
+  userId     String
+  businessId String
+  user       User          @relation(fields: [userId], references: [id])
+  business   Business      @relation(fields: [businessId], references: [id])
+  items      InvoiceItem[]
+  payments   Payment[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 }
 
 model Payment {
-  id          String   @id @default(cuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
-  amount      Float
-  method      String   // CASH, BANK_TRANSFER, UPI, OTHER
-  reference   String?  // Payment reference number or transaction ID
-  note        String?
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  amount    Float
+  method    String
+  reference String?
+  note      String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model InvoiceItem {
   id        String  @id @default(cuid())
   quantity  Int
-  price     Float?  // Add price field to store custom price
+  price     Float?
   productId String
   product   Product @relation(fields: [productId], references: [id])
   invoiceId String
