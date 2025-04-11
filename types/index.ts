@@ -2,6 +2,18 @@ export interface User {
   id: string;
   email: string;
   name: string | null;
+  subscriptionId?: string;
+  subscription?: Subscription;
+}
+
+export interface Subscription {
+  id: string;
+  name: string;
+  description: string;
+  maxBusinesses: number;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Client {

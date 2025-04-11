@@ -29,6 +29,36 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Get user's subscription
+    const userWithSubscription = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: { subscription: true },
+    });
+
+    if (!userWithSubscription?.subscription) {
+      return NextResponse.json(
+        { error: "No subscription found" },
+        { status: 400 }
+      );
+    }
+
+    // Count user's existing businesses
+    const businessCount = await prisma.business.count({
+      where: { userId: user.id },
+    });
+
+    // Check if user has reached their business limit
+    if (businessCount >= userWithSubscription.subscription.maxBusinesses) {
+      return NextResponse.json(
+        {
+          error: "Business limit reached for your subscription plan",
+          currentPlan: userWithSubscription.subscription.name,
+          maxBusinesses: userWithSubscription.subscription.maxBusinesses,
+        },
+        { status: 403 }
+      );
+    }
+
     const {
       name,
       address,
@@ -41,6 +71,7 @@ export async function POST(request: Request) {
       accountNo,
       upiId,
     } = await request.json();
+
     const business = await prisma.business.create({
       data: {
         name,

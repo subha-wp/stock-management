@@ -8,13 +8,15 @@ generator client {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
+  id             String        @id @default(cuid())
+  email          String        @unique
   hashedPassword String
   name           String?
   avatarUrl      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  subscriptionId String?       @default("basic")
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   products   Product[]
   invoices   Invoice[]
@@ -24,6 +26,17 @@ model User {
   clients    Client[]
 
   sessions Session[]
+}
+
+model Subscription {
+  id            String   @id
+  name          String
+  description   String
+  maxBusinesses Int
+  price         Float
+  users         User[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Session {
