@@ -15,9 +15,11 @@ import {
   LogOut,
   Users,
   FileBarChart,
+  Crown,
 } from "lucide-react";
-import { User as UserType } from "@/types";
+import type { User as UserType } from "@/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface SidebarProps {
   user: UserType;
@@ -33,12 +35,24 @@ const menuItems = [
     icon: FileBarChart,
     label: "Client Reports",
     href: "/dashboard/reports/clients",
+    requiresGold: true,
   },
 ];
+
+const subscriptionBadgeVariants = {
+  basic: "bg-gray-500",
+  silver: "bg-gray-300 text-white",
+  gold: "bg-yellow-400 text-black",
+};
 
 export function Sidebar({ user }: SidebarProps) {
   const [expanded, setExpanded] = useState(true);
   const pathname = usePathname();
+
+  // Filter menu items based on subscription
+  const filteredMenuItems = menuItems.filter(
+    (item) => !item.requiresGold || user.subscriptionId === "gold"
+  );
 
   return (
     <aside
@@ -66,7 +80,7 @@ export function Sidebar({ user }: SidebarProps) {
       </div>
 
       <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           const Icon = item.icon;
           return (
             <Link key={item.href} href={item.href}>
@@ -90,7 +104,7 @@ export function Sidebar({ user }: SidebarProps) {
       <div className="border-t p-4">
         <div
           className={cn(
-            "flex items-center space-x-2 mb-4",
+            "flex items-center space-x-2 mb-4 group relative cursor-pointer",
             !expanded && "justify-center"
           )}
         >
@@ -104,21 +118,36 @@ export function Sidebar({ user }: SidebarProps) {
               <p className="text-sm font-medium truncate">
                 {user.name || "User"}
               </p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                <Badge
+                  className={cn(
+                    "text-xs",
+                    subscriptionBadgeVariants[
+                      user.subscriptionId as keyof typeof subscriptionBadgeVariants
+                    ]
+                  )}
+                >
+                  <Crown className="h-3 w-3 mr-1" />
+                  {user.subscriptionId}
+                </Badge>
+              </div>
             </div>
           )}
+
+          {/* Logout button that appears on hover */}
+          <div className="absolute right-0 top-0 h-full w-full flex items-center justify-center bg-white/90 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              onClick={() => logout()}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              {expanded && <span>Logout</span>}
+            </Button>
+          </div>
         </div>
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full flex items-center space-x-2",
-            !expanded && "justify-center"
-          )}
-          onClick={() => logout()}
-        >
-          <LogOut className="h-5 w-5" />
-          {expanded && <span>Logout</span>}
-        </Button>
       </div>
     </aside>
   );
