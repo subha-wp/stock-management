@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,6 +14,7 @@ import {
   FileText,
   LogOut,
   Users,
+  FileBarChart,
 } from "lucide-react";
 import { User as UserType } from "@/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -29,6 +29,11 @@ const menuItems = [
   { icon: Package, label: "Products", href: "/dashboard/products" },
   { icon: FileText, label: "Invoices", href: "/dashboard/invoices" },
   { icon: Users, label: "Customers", href: "/dashboard/clients" },
+  {
+    icon: FileBarChart,
+    label: "Client Reports",
+    href: "/dashboard/reports/clients",
+  },
 ];
 
 export function Sidebar({ user }: SidebarProps) {
