@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @next/next/no-img-element */
 import type { Invoice } from "@/types";
 
@@ -8,11 +9,11 @@ export function InvoiceThermal({ invoice }: { invoice: Invoice }) {
   return (
     <div className="w-[58mm] font-mono text-[10px] max-h-fit leading-tight p-2 bg-white">
       <div className="text-center mb-2">
-        <img
+        {/* <img
           src={invoice.business?.logoUrl || DEFAULT_LOGO}
           alt="Business Logo"
           className="w-16 h-16 object-contain mx-auto mb-2"
-        />
+        /> */}
         <h1 className="font-bold text-[12px]">{invoice.business?.name}</h1>
         <p>{invoice.business?.address}</p>
         <p>{invoice.business?.phone}</p>
