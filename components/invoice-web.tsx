@@ -12,24 +12,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Invoice } from "@/types";
 
+const DEFAULT_LOGO =
+  "https://gist.github.com/user-attachments/assets/a6925d83-68ab-4150-a95f-fae671d61c99";
+
 export function InvoiceWeb({ invoice }: { invoice: Invoice }) {
   return (
     <Card className="w-full max-w-4xl mx-auto my-4 p-8 bg-white shadow-lg">
       <CardHeader className="flex flex-row justify-between items-start pb-3 px-0">
         <div className="flex flex-col">
-          {invoice.business?.logoUrl && (
-            <img
-              src={
-                invoice.business.logoUrl
-                  ? invoice.business.logoUrl
-                  : "/Ramdhanu 96px.png"
-              }
-              alt="Business Logo"
-              className="w-32 h-32 object-contain mb-4"
-            />
-          )}
           <img
-            src="/Ramdhanu 96px.png"
+            src={invoice.business?.logoUrl || DEFAULT_LOGO}
             alt="Business Logo"
             className="w-32 h-32 object-contain mb-4"
           />

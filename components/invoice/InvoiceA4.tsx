@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import Image from "next/image";
+
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -12,22 +12,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import type { Invoice } from "@/types";
 
+const DEFAULT_LOGO =
+  "https://gist.github.com/user-attachments/assets/a6925d83-68ab-4150-a95f-fae671d61c99";
+
 export function InvoiceA4({ invoice }: { invoice: Invoice }) {
   return (
     <div className="w-[210mm] h-[297mm] mx-auto my-4 p-8 bg-white shadow-lg print:shadow-none">
       <div className="flex flex-row justify-between items-start pb-3">
         <div className="flex flex-col">
-          {invoice.business?.logoUrl && (
-            <Image
-              src={invoice.business.logoUrl || "/placeholder.svg"}
-              alt="Business Logo"
-              width={128}
-              height={128}
-              className="object-contain mb-4"
-            />
-          )}
           <img
-            src="/Ramdhanu 96px.png"
+            src={invoice.business?.logoUrl || DEFAULT_LOGO}
             alt="Business Logo"
             className="w-28 h-28 object-contain mb-4"
           />

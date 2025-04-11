@@ -1,9 +1,18 @@
+/* eslint-disable @next/next/no-img-element */
 import type { Invoice } from "@/types";
+
+const DEFAULT_LOGO =
+  "https://gist.github.com/user-attachments/assets/a6925d83-68ab-4150-a95f-fae671d61c99";
 
 export function InvoiceThermal({ invoice }: { invoice: Invoice }) {
   return (
-    <div className="w-[58mm] font-mono text-[10px]  max-h-fit leading-tight p-2 bg-white">
+    <div className="w-[58mm] font-mono text-[10px] max-h-fit leading-tight p-2 bg-white">
       <div className="text-center mb-2">
+        <img
+          src={invoice.business?.logoUrl || DEFAULT_LOGO}
+          alt="Business Logo"
+          className="w-16 h-16 object-contain mx-auto mb-2"
+        />
         <h1 className="font-bold text-[12px]">{invoice.business?.name}</h1>
         <p>{invoice.business?.address}</p>
         <p>{invoice.business?.phone}</p>
