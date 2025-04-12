@@ -62,6 +62,9 @@ export async function POST(request: Request) {
     const {
       name,
       address,
+      city,
+      state,
+      pincode,
       phone,
       email,
       website,
@@ -76,6 +79,9 @@ export async function POST(request: Request) {
       data: {
         name,
         address,
+        city,
+        state,
+        pincode,
         phone,
         email,
         website,

@@ -48,6 +48,9 @@ export async function PUT(
     const {
       name,
       address,
+      city,
+      state,
+      pincode,
       phone,
       email,
       website,
@@ -62,6 +65,9 @@ export async function PUT(
       data: {
         name,
         address,
+        city,
+        state,
+        pincode,
         phone,
         email,
         website,

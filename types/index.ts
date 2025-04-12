@@ -32,6 +32,9 @@ export interface Business {
   id: string;
   name: string;
   address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
   phone?: string;
   email?: string;
   website?: string;

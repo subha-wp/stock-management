@@ -70,6 +70,9 @@ model Business {
   id        String    @id @default(cuid())
   name      String
   address   String?
+  city      String?
+  state     String?
+  pincode   String?
   phone     String?
   email     String?
   website   String?

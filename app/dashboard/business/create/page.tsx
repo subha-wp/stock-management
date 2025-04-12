@@ -16,6 +16,9 @@ export default function CreateBusiness() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [pincode, setPincode] = useState("");
   const [website, setWebsite] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [bankName, setBankName] = useState("");
@@ -35,6 +38,9 @@ export default function CreateBusiness() {
         email,
         phone,
         address,
+        city,
+        state,
+        pincode,
         website,
         logoUrl,
         bankName,
@@ -87,6 +93,30 @@ export default function CreateBusiness() {
             id="address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="city">City</Label>
+          <Input
+            id="city"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="state">State</Label>
+          <Input
+            id="state"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="pincode">Pincode</Label>
+          <Input
+            id="pincode"
+            value={pincode}
+            onChange={(e) => setPincode(e.target.value)}
           />
         </div>
         <div>
