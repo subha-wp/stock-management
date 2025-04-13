@@ -43,12 +43,32 @@ const units = [
   "Ft",
 ];
 
+const categories = [
+  "Electronics",
+  "Clothing",
+  "Food",
+  "Beverages",
+  "Home & Kitchen",
+  "Beauty & Personal Care",
+  "Sports & Fitness",
+  "Books",
+  "Toys & Games",
+  "Automotive",
+  "Health & Wellness",
+  "Office Supplies",
+  "Pet Supplies",
+  "Tools & Home Improvement",
+  "General",
+];
+
 export default function EditProduct() {
   const { id } = useParams();
   const router = useRouter();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("General");
+  const [buyPrice, setBuyPrice] = useState("");
   const [price, setPrice] = useState("");
   const [unit, setUnit] = useState("piece");
   const [taxPercent, setTaxPercent] = useState("0");
@@ -63,8 +83,13 @@ export default function EditProduct() {
     const fetchProduct = async () => {
       try {
         const product = await getProduct(id as string);
+
+        console.log("product details", product);
+
         setName(product.name);
         setDescription(product.description || "");
+        setCategory(product.category);
+        setBuyPrice(product.buyPrice.toString());
         setPrice(product.price.toString());
         setUnit(product.unit);
         setTaxPercent(product.taxPercent.toString());
@@ -79,6 +104,18 @@ export default function EditProduct() {
     fetchProduct();
   }, [id]);
 
+  const calculateProfit = () => {
+    const buyPriceNum = parseFloat(buyPrice) || 0;
+    const sellPriceNum = parseFloat(price) || 0;
+    if (buyPriceNum === 0) return { profit: 0, margin: 0 };
+
+    const profit = sellPriceNum - buyPriceNum;
+    const margin = (profit / buyPriceNum) * 100;
+    return { profit, margin };
+  };
+
+  const { profit, margin } = calculateProfit();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -87,6 +124,8 @@ export default function EditProduct() {
       await updateProduct(id as string, {
         name,
         description,
+        category,
+        buyPrice: parseFloat(buyPrice),
         price: parseFloat(price),
         unit,
         taxPercent: parseFloat(taxPercent),
@@ -153,16 +192,63 @@ export default function EditProduct() {
           />
         </div>
         <div>
-          <Label htmlFor="price">Price</Label>
-          <Input
-            id="price"
-            type="number"
-            step="0.01"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            required
-          />
+          <Label htmlFor="category">Category</Label>
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="buyPrice">Buy Price</Label>
+            <Input
+              id="buyPrice"
+              type="number"
+              step="0.01"
+              value={buyPrice}
+              onChange={(e) => setBuyPrice(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="price">Selling Price</Label>
+            <Input
+              id="price"
+              type="number"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+        {parseFloat(buyPrice) > 0 && parseFloat(price) > 0 && (
+          <div className="bg-muted p-4 rounded-lg">
+            <h3 className="font-medium mb-2">Profit Analysis</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Profit per unit:</span>
+                <span className="ml-2 font-medium text-green-600">
+                  ₹{profit.toFixed(2)}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Profit margin:</span>
+                <span className="ml-2 font-medium text-green-600">
+                  {margin.toFixed(2)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
         <div>
           <Label htmlFor="unit">Unit</Label>
           <Select value={unit} onValueChange={setUnit}>

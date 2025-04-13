@@ -64,6 +64,7 @@ export async function POST(request: Request) {
     const {
       name,
       description,
+      buyPrice,
       price,
       unit,
       taxPercent,
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
         name,
         description,
         price,
+        buyPrice,
         unit,
         taxPercent,
         stock: parseInt(stock) || 0,
