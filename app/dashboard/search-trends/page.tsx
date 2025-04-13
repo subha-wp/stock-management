@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 //@ts-nocheck
 "use client";
 
@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { useBusiness } from "@/lib/hooks/useBusiness";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 interface TrendingSearch {
   query: string;
@@ -58,6 +58,7 @@ export default function SearchTrendsPage() {
   });
   const { businesses } = useBusiness();
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const [trendSearch, setTrendSearch] = useState("");
 
   // Get unique cities from businesses
   const cities = Array.from(
@@ -69,9 +70,15 @@ export default function SearchTrendsPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/search/trending?city=${selectedCity}&days=${timeRange}&page=${page}&limit=10`
-      );
+      const params = new URLSearchParams({
+        city: selectedCity,
+        days: timeRange,
+        page: page.toString(),
+        limit: "10",
+        ...(trendSearch && { search: trendSearch }),
+      });
+
+      const response = await fetch(`/api/search/trending?${params}`);
       if (!response.ok) throw new Error("Failed to fetch trending searches");
       const data = await response.json();
       setTrending(data.trending);
@@ -105,7 +112,7 @@ export default function SearchTrendsPage() {
       setPage(1); // Reset page when city or time range changes
       fetchTrending();
     }
-  }, [selectedCity, timeRange]);
+  }, [selectedCity, timeRange, trendSearch]);
 
   useEffect(() => {
     if (selectedCity) {
@@ -189,6 +196,15 @@ export default function SearchTrendsPage() {
                   <SelectItem value="90">Last 3 months</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Search trends..."
+                value={trendSearch}
+                onChange={(e) => setTrendSearch(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </div>
 
