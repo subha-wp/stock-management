@@ -26,11 +26,20 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useBusiness } from "@/lib/hooks/useBusiness";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface TrendingSearch {
   query: string;
   count: number;
   lastSearchedAt: string;
+}
+
+interface PaginationData {
+  total: number;
+  pages: number;
+  page: number;
+  limit: number;
 }
 
 export default function SearchTrendsPage() {
@@ -40,6 +49,13 @@ export default function SearchTrendsPage() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationData>({
+    total: 0,
+    pages: 0,
+    page: 1,
+    limit: 10,
+  });
   const { businesses } = useBusiness();
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -54,11 +70,12 @@ export default function SearchTrendsPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/search/trending?city=${selectedCity}&days=${timeRange}`
+        `/api/search/trending?city=${selectedCity}&days=${timeRange}&page=${page}&limit=10`
       );
       if (!response.ok) throw new Error("Failed to fetch trending searches");
       const data = await response.json();
-      setTrending(data);
+      setTrending(data.trending);
+      setPagination(data.pagination);
     } catch (error) {
       toast.error("Failed to fetch trending searches");
     } finally {
@@ -85,9 +102,16 @@ export default function SearchTrendsPage() {
 
   useEffect(() => {
     if (selectedCity) {
+      setPage(1); // Reset page when city or time range changes
       fetchTrending();
     }
   }, [selectedCity, timeRange]);
+
+  useEffect(() => {
+    if (selectedCity) {
+      fetchTrending();
+    }
+  }, [page]);
 
   useEffect(() => {
     if (debouncedSearch) {
@@ -171,38 +195,66 @@ export default function SearchTrendsPage() {
           {loading ? (
             <div className="text-center py-8">Loading trending searches...</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Search Query</TableHead>
-                  <TableHead className="text-right">Search Count</TableHead>
-                  <TableHead>Last Searched</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {trending.map((search) => (
-                  <TableRow key={search.query}>
-                    <TableCell className="font-medium">
-                      {search.query}
-                    </TableCell>
-                    <TableCell className="text-right">{search.count}</TableCell>
-                    <TableCell>
-                      {format(
-                        new Date(search.lastSearchedAt),
-                        "MMM d, yyyy HH:mm"
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {trending.length === 0 && (
+            <>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center py-8">
-                      No trending searches found for this city and time range
-                    </TableCell>
+                    <TableHead>Search Query</TableHead>
+                    <TableHead className="text-right">Search Count</TableHead>
+                    <TableHead>Last Searched</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {trending.map((search) => (
+                    <TableRow key={search.query}>
+                      <TableCell className="font-medium">
+                        {search.query}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {search.count}
+                      </TableCell>
+                      <TableCell>
+                        {format(
+                          new Date(search.lastSearchedAt),
+                          "MMM d, yyyy HH:mm"
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {trending.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center py-8">
+                        No trending searches found for this city and time range
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+
+              {pagination.pages > 1 && (
+                <div className="flex justify-center items-center gap-4 mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm">
+                    Page {page} of {pagination.pages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === pagination.pages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

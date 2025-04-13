@@ -12,6 +12,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const city = searchParams.get("city")?.toLowerCase();
     const days = parseInt(searchParams.get("days") || "7");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
 
     if (!city) {
       return NextResponse.json(
@@ -20,22 +22,30 @@ export async function GET(request: Request) {
       );
     }
 
+    const skip = (page - 1) * limit;
+
     // Get trending searches for the specified city and time period
-    const trending = await prisma.searchQuery.findMany({
-      where: {
-        city: city,
-        lastSearchedAt: {
-          gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
-        },
-        // Add a minimum count threshold to filter out noise
-        count: {
-          gte: 2, // Only show queries that have been suggested at least twice
-        },
+    const where = {
+      city: city,
+      lastSearchedAt: {
+        gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
       },
-      orderBy: [{ count: "desc" }, { lastSearchedAt: "desc" }],
-      take: 50, // Limit to top 50 trending searches
-      distinct: ["query"], // Ensure unique queries only
-    });
+      // Add a minimum count threshold to filter out noise
+      count: {
+        gte: 2, // Only show queries that have been suggested at least twice
+      },
+    };
+
+    const [trending, total] = await Promise.all([
+      prisma.searchQuery.findMany({
+        where,
+        orderBy: [{ count: "desc" }, { lastSearchedAt: "desc" }],
+        skip,
+        take: limit,
+        distinct: ["query"], // Ensure unique queries only
+      }),
+      prisma.searchQuery.count({ where }),
+    ]);
 
     // Format the response
     const formattedTrending = trending.map((item) => ({
@@ -44,7 +54,15 @@ export async function GET(request: Request) {
       lastSearchedAt: item.lastSearchedAt,
     }));
 
-    return NextResponse.json(formattedTrending);
+    return NextResponse.json({
+      trending: formattedTrending,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limit),
+        page,
+        limit,
+      },
+    });
   } catch (error) {
     console.error("Trending search error:", error);
     return NextResponse.json(

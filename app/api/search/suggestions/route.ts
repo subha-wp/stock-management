@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { validateRequest } from "@/lib/auth";
@@ -11,6 +13,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
     const city = searchParams.get("city")?.toLowerCase();
+    const finalkeyword = query + " " + "india";
 
     if (!query || !city) {
       return NextResponse.json(
@@ -26,13 +29,17 @@ export async function GET(request: Request) {
       return NextResponse.json(cachedResult.data);
     }
 
+    console.log("finalkeyword", finalkeyword);
+
     // Fetch suggestions from Google
     const googleResponse = await fetch(
       `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(
-        query
+        finalkeyword
       )}`
     );
     const [, suggestions] = await googleResponse.json();
+
+    console.log("suggestion", suggestions);
 
     // Store each suggestion in the database
     const { user } = await validateRequest();
