@@ -18,13 +18,14 @@ model User {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  products   Product[]
-  invoices   Invoice[]
-  businesses Business[]
-  stockLogs  StockLog[]
-  payments   Payment[]
-  clients    Client[]
-  expenses   Expense[]
+  products      Product[]
+  invoices      Invoice[]
+  businesses    Business[]
+  stockLogs     StockLog[]
+  payments      Payment[]
+  clients       Client[]
+  expenses      Expense[]
+  searchQueries SearchQuery[]
 
   sessions Session[]
 }
@@ -174,4 +175,19 @@ model Expense {
   user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model SearchQuery {
+  id             String   @id @default(cuid())
+  query          String
+  city           String
+  count          Int      @default(1)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  lastSearchedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@unique([query, city], name: "query_city")
+  @@index([city, lastSearchedAt])
+  @@index([count])
 }
