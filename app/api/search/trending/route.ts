@@ -27,12 +27,24 @@ export async function GET(request: Request) {
         lastSearchedAt: {
           gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
         },
+        // Add a minimum count threshold to filter out noise
+        count: {
+          gte: 2, // Only show queries that have been suggested at least twice
+        },
       },
       orderBy: [{ count: "desc" }, { lastSearchedAt: "desc" }],
-      take: 50,
+      take: 50, // Limit to top 50 trending searches
+      distinct: ["query"], // Ensure unique queries only
     });
 
-    return NextResponse.json(trending);
+    // Format the response
+    const formattedTrending = trending.map((item) => ({
+      query: item.query,
+      count: item.count,
+      lastSearchedAt: item.lastSearchedAt,
+    }));
+
+    return NextResponse.json(formattedTrending);
   } catch (error) {
     console.error("Trending search error:", error);
     return NextResponse.json(

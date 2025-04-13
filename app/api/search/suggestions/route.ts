@@ -34,27 +34,32 @@ export async function GET(request: Request) {
     );
     const [, suggestions] = await googleResponse.json();
 
-    // Store the search query and increment count
+    // Store each suggestion in the database
     const { user } = await validateRequest();
     if (user) {
-      await prisma.searchQuery.upsert({
-        where: {
-          query_city: {
-            query: query.toLowerCase(),
-            city: city,
-          },
-        },
-        update: {
-          count: { increment: 1 },
-          lastSearchedAt: new Date(),
-        },
-        create: {
-          query: query.toLowerCase(),
-          city: city,
-          count: 1,
-          userId: user.id,
-        },
-      });
+      // Store all suggestions in parallel
+      await Promise.all(
+        suggestions.map((suggestion: string) =>
+          prisma.searchQuery.upsert({
+            where: {
+              query_city: {
+                query: suggestion.toLowerCase(),
+                city: city,
+              },
+            },
+            update: {
+              count: { increment: 1 },
+              lastSearchedAt: new Date(),
+            },
+            create: {
+              query: suggestion.toLowerCase(),
+              city: city,
+              count: 1,
+              userId: user.id,
+            },
+          })
+        )
+      );
     }
 
     // Cache the result

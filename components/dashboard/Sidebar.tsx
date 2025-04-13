@@ -18,6 +18,7 @@ import {
   Crown,
   Receipt,
   Landmark,
+  Hash,
 } from "lucide-react";
 import type { User as UserType } from "@/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -39,6 +40,12 @@ const menuItems = [
     icon: FileBarChart,
     label: "Client Reports",
     href: "/dashboard/reports/clients",
+    requiresGold: true,
+  },
+  {
+    icon: Hash,
+    label: "Trends",
+    href: "/dashboard/search-trends",
     requiresGold: true,
   },
 ];
