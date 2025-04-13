@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         break;
     }
 
-    // Get invoices for the period
+    // Get invoices for the period with items
     const invoices = await prisma.invoice.findMany({
       where: {
         userId: user.id,
@@ -47,6 +47,11 @@ export async function GET(request: Request) {
       },
       include: {
         client: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
         payments: true,
       },
       orderBy: {
@@ -79,6 +84,11 @@ export async function GET(request: Request) {
         },
       },
       include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
         payments: true,
       },
     });
@@ -125,16 +135,104 @@ export async function GET(request: Request) {
         : ((totalExpenses - previousTotalExpenses) / previousTotalExpenses) *
           100;
 
-    // Calculate totals
-    const totalSales = invoices.reduce(
-      (sum, invoice) => sum + invoice.total,
-      0
-    );
-    const previousTotalSales = previousPeriodInvoices.reduce(
-      (sum, invoice) => sum + invoice.total,
-      0
+    // Calculate sales and profit metrics
+    const calculateInvoiceMetrics = (
+      invoice: {
+        items: ({
+          product: {
+            id: string;
+            category: string;
+            description: string | null;
+            userId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            price: number;
+            buyPrice: number;
+            unit: string;
+            taxPercent: number;
+            stock: number;
+            minStock: number;
+            images: string[];
+          };
+        } & {
+          id: string;
+          quantity: number;
+          price: number | null;
+          productId: string;
+          invoiceId: string;
+        })[];
+        payments: {
+          id: string;
+          date: Date;
+          amount: number;
+          reference: string | null;
+          userId: string;
+          createdAt: Date;
+          invoiceId: string;
+          method: string;
+          note: string | null;
+        }[];
+      } & {
+        number: string;
+        id: string;
+        date: Date;
+        userId: string;
+        createdAt: Date;
+        updatedAt: Date;
+        clientId: string;
+        dueDate: Date;
+        status: string;
+        total: number;
+        amountPaid: number;
+        businessId: string;
+      }
+    ) => {
+      let totalSales = 0;
+      let totalCost = 0;
+
+      invoice.items.forEach((item) => {
+        const sellPrice = item.price || item.product.price;
+        const costPrice = item.product.buyPrice;
+
+        totalSales += sellPrice * item.quantity;
+        totalCost += costPrice * item.quantity;
+      });
+
+      return {
+        sales: totalSales,
+        cost: totalCost,
+        grossProfit: totalSales - totalCost,
+      };
+    };
+
+    // Current period metrics
+    const currentMetrics = invoices.reduce(
+      (acc, invoice) => {
+        const metrics = calculateInvoiceMetrics(invoice);
+        return {
+          totalSales: acc.totalSales + metrics.sales,
+          totalCost: acc.totalCost + metrics.cost,
+          grossProfit: acc.grossProfit + metrics.grossProfit,
+        };
+      },
+      { totalSales: 0, totalCost: 0, grossProfit: 0 }
     );
 
+    // Previous period metrics
+    const previousMetrics = previousPeriodInvoices.reduce(
+      (acc, invoice) => {
+        const metrics = calculateInvoiceMetrics(invoice);
+        return {
+          totalSales: acc.totalSales + metrics.sales,
+          totalCost: acc.totalCost + metrics.cost,
+          grossProfit: acc.grossProfit + metrics.grossProfit,
+        };
+      },
+      { totalSales: 0, totalCost: 0, grossProfit: 0 }
+    );
+
+    // Calculate total credit
     const totalCredit = invoices.reduce(
       (sum, invoice) => sum + (invoice.total - invoice.amountPaid),
       0
@@ -146,28 +244,37 @@ export async function GET(request: Request) {
 
     // Calculate trends
     const salesTrend =
-      previousTotalSales === 0
+      previousMetrics.totalSales === 0
         ? 100
-        : ((totalSales - previousTotalSales) / previousTotalSales) * 100;
+        : ((currentMetrics.totalSales - previousMetrics.totalSales) /
+            previousMetrics.totalSales) *
+          100;
 
     const creditTrend =
       previousTotalCredit === 0
         ? 100
         : ((totalCredit - previousTotalCredit) / previousTotalCredit) * 100;
 
-    // Calculate profit/loss (total sales - total expenses)
-    const profitLoss = totalSales - totalExpenses;
-    const previousProfitLoss = previousTotalSales - previousTotalExpenses;
+    // Calculate net profit (gross profit - expenses)
+    const netProfit = currentMetrics.grossProfit - totalExpenses;
+    const previousNetProfit =
+      previousMetrics.grossProfit - previousTotalExpenses;
 
-    // Calculate profit/loss trend
-    const profitLossTrend =
-      previousProfitLoss === 0
+    // Calculate profit trends
+    const grossProfitTrend =
+      previousMetrics.grossProfit === 0
         ? 100
-        : ((profitLoss - previousProfitLoss) / Math.abs(previousProfitLoss)) *
+        : ((currentMetrics.grossProfit - previousMetrics.grossProfit) /
+            Math.abs(previousMetrics.grossProfit)) *
           100;
 
+    const netProfitTrend =
+      previousNetProfit === 0
+        ? 100
+        : ((netProfit - previousNetProfit) / Math.abs(previousNetProfit)) * 100;
+
     return NextResponse.json({
-      totalSales,
+      totalSales: currentMetrics.totalSales,
       totalCredit,
       totalProducts: lowStockProducts.length,
       pendingInvoices: invoices.filter(
@@ -175,14 +282,22 @@ export async function GET(request: Request) {
           invoice.status === "PENDING" || invoice.status === "OVERDUE"
       ).length,
       totalExpenses,
-      profitLoss,
+      grossProfit: currentMetrics.grossProfit,
+      netProfit,
       recentInvoices: invoices,
       recentExpenses: expenses,
       lowStockProducts,
       salesTrend,
       creditTrend,
       expenseTrend,
-      profitLossTrend,
+      grossProfitTrend,
+      netProfitTrend,
+      profitMetrics: {
+        totalCost: currentMetrics.totalCost,
+        grossMarginPercent:
+          (currentMetrics.grossProfit / currentMetrics.totalSales) * 100,
+        netMarginPercent: (netProfit / currentMetrics.totalSales) * 100,
+      },
     });
   } catch (error) {
     console.error("Dashboard error:", error);
