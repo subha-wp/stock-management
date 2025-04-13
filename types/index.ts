@@ -52,6 +52,8 @@ export interface Product {
   id: string;
   name: string;
   description: string | null;
+  category: string;
+  buyPrice: number;
   price: number;
   unit: string;
   taxPercent: number;

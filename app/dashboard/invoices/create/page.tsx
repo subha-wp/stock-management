@@ -73,7 +73,7 @@ export default function CreateInvoicePage() {
               {selectedClient.totalCredit && (
                 <div>
                   <span className="font-medium">Total Credit:</span>{" "}
-                  {selectedClient.totalCredit}
+                  {Math.floor(selectedClient.totalCredit)}
                 </div>
               )}
               <Button variant="outline" onClick={() => setSelectedClient(null)}>

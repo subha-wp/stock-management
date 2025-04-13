@@ -93,6 +93,8 @@ model Product {
   id           String        @id @default(cuid())
   name         String
   description  String?
+  category     String        @default("General") // Added category field
+  buyPrice     Float         @default(0) // Added buy price field
   price        Float
   unit         String        @default("piece")
   taxPercent   Float         @default(0)
@@ -105,6 +107,8 @@ model Product {
   stockLogs    StockLog[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+
+  @@index([category])
 }
 
 model StockLog {
