@@ -110,6 +110,7 @@ export default function ProductsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Buy Price</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead>Status</TableHead>
@@ -131,6 +132,7 @@ export default function ProductsPage() {
                       )}
                     </div>
                   </TableCell>
+                  <TableCell>₹{product.buyPrice.toFixed(2)}</TableCell>
                   <TableCell>₹{product.price.toFixed(2)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

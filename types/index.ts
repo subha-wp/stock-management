@@ -130,3 +130,26 @@ export interface Expense {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface DashboardStats {
+  totalSales: number;
+  totalCredit: number;
+  totalProducts: number;
+  pendingInvoices: number;
+  totalExpenses: number;
+  grossProfit: number;
+  netProfit: number;
+  recentInvoices: Invoice[];
+  recentExpenses: Expense[];
+  lowStockProducts: Product[];
+  salesTrend: number;
+  creditTrend: number;
+  expenseTrend: number;
+  grossProfitTrend: number;
+  netProfitTrend: number;
+  profitMetrics: {
+    totalCost: number;
+    grossMarginPercent: number;
+    netMarginPercent: number;
+  };
+}
