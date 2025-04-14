@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import Image from "next/image";
 
 interface QRPopupProps {
   amount: number;
@@ -34,7 +33,7 @@ export function QRPopup({ amount, upiId }: QRPopupProps) {
           </DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center space-y-4">
-          <Image src="/Ramdhanu 96px.png" width={96} height={96} alt="logo" />
+          {/* <Image src="/Ramdhanu 96px.png" width={96} height={96} alt="logo" /> */}
           <QRCodeSVG value={upiLink} size={256} />
           <p className="text-center text-sm text-muted-foreground">
             Scan this QR code to pay ₹{amount} via UPI
