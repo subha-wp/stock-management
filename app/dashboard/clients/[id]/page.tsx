@@ -11,6 +11,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Client, Invoice } from "@/types";
+import { BulkPaymentForm } from "@/components/payments/BulkPaymentForm";
 
 interface ClientWithInvoices extends Client {
   invoices?: (Invoice & {
@@ -74,6 +75,24 @@ export default function EditClientPage() {
     }
   };
 
+  const handlePaymentSuccess = () => {
+    // Refresh client data to update dues
+    if (id) {
+      fetchClient();
+    }
+  };
+
+  async function fetchClient() {
+    try {
+      const response = await fetch(`/api/clients/${id}`);
+      if (!response.ok) throw new Error("Failed to fetch client");
+      const data = await response.json();
+      setClient(data);
+    } catch (error) {
+      toast.error("Failed to fetch client details");
+    }
+  }
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -92,6 +111,11 @@ export default function EditClientPage() {
       return acc + (invoiceTotal - paymentTotal);
     }, 0) || 0;
 
+  const unpaidInvoices =
+    client.invoices?.filter(
+      (invoice) => invoice.total - invoice.amountPaid > 0
+    ) || [];
+
   return (
     <div className="container mx-auto px-4 pb-20">
       <Link
@@ -101,67 +125,76 @@ export default function EditClientPage() {
         <ArrowLeft className="w-4 h-4 mr-1" /> Back to Clients
       </Link>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Client</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>Total Dues</Label>
-              <p className="text-lg font-semibold">₹{totalDues.toFixed(2)}</p>
-            </div>
-            <div className="flex gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => router.push("/dashboard/clients")}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" className="flex-1" disabled={saving}>
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit Client</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Total Dues</Label>
+                <p className="text-lg font-semibold">₹{totalDues.toFixed(2)}</p>
+              </div>
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => router.push("/dashboard/clients")}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1" disabled={saving}>
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {unpaidInvoices.length > 0 && (
+          <BulkPaymentForm
+            invoices={unpaidInvoices}
+            onSuccess={handlePaymentSuccess}
+          />
+        )}
+      </div>
     </div>
   );
 }
