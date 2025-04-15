@@ -133,6 +133,7 @@ model Invoice {
   status     String
   total      Float
   amountPaid Float         @default(0)
+  discount   Float         @default(0)
   userId     String
   businessId String
   user       User          @relation(fields: [userId], references: [id])
@@ -144,17 +145,19 @@ model Invoice {
 }
 
 model Payment {
-  id        String   @id @default(cuid())
-  invoiceId String
-  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
-  amount    Float
-  method    String
-  reference String?
-  note      String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  date      DateTime @default(now())
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  invoiceId      String
+  invoice        Invoice  @relation(fields: [invoiceId], references: [id])
+  amount         Float
+  method         String
+  reference      String?
+  note           String?
+  isDiscounted   Boolean  @default(false) // New field to track if payment includes discount
+  discountAmount Float    @default(0)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  date           DateTime @default(now())
+  createdAt      DateTime @default(now())
 }
 
 model InvoiceItem {

@@ -11,6 +11,7 @@ const paymentSchema = z.object({
   method: z.enum(["CASH", "BANK_TRANSFER", "UPI", "OTHER"]),
   reference: z.string().optional(),
   note: z.string().optional(),
+  applyAsFullPayment: z.boolean().optional(), // New field for discount handling
 });
 
 export async function POST(request: Request) {
@@ -42,7 +43,10 @@ export async function POST(request: Request) {
 
     // Determine new status
     let newStatus = invoice.status;
-    if (newBalance <= 0) {
+    if (validatedData.applyAsFullPayment) {
+      // If discount is applied, mark as PAID regardless of amount
+      newStatus = "PAID";
+    } else if (newBalance <= 0) {
       newStatus = "PAID";
     } else if (newAmountPaid > 0) {
       newStatus = "PARTIALLY_PAID";

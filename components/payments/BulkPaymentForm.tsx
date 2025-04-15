@@ -33,11 +33,28 @@ export function BulkPaymentForm({ invoices, onSuccess }: BulkPaymentFormProps) {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
+  const [applyDiscount, setApplyDiscount] = useState(false);
 
   const totalDue = invoices.reduce((sum, invoice) => {
     const remaining = invoice.total - invoice.amountPaid;
     return sum + remaining;
   }, 0);
+
+  const selectedDue = selectedInvoices.reduce((sum, id) => {
+    const invoice = invoices.find((inv) => inv.id === id);
+    if (invoice) {
+      return sum + (invoice.total - invoice.amountPaid);
+    }
+    return sum;
+  }, 0);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedInvoices(invoices.map((inv) => inv.id));
+    } else {
+      setSelectedInvoices([]);
+    }
+  };
 
   const handleInvoiceSelect = (invoiceId: string) => {
     setSelectedInvoices((prev) =>
@@ -77,17 +94,30 @@ export function BulkPaymentForm({ invoices, onSuccess }: BulkPaymentFormProps) {
         0
       );
 
+      // If applying discount, calculate the discount ratio
+      const discountRatio = applyDiscount
+        ? paymentAmount / totalSelectedDue
+        : 1;
+
       // Create payments for each selected invoice
       const payments = selectedInvoiceDetails.map((inv) => {
         const proportion = inv.due / totalSelectedDue;
-        const invoicePayment = Math.min(paymentAmount * proportion, inv.due);
+        let invoicePayment = paymentAmount * proportion;
+
+        // If applying discount, adjust the payment amount
+        if (applyDiscount) {
+          invoicePayment = inv.due * discountRatio;
+        }
 
         return {
           invoiceId: inv.id,
           amount: invoicePayment,
           method,
           reference,
-          note: `${note} (Bulk payment)`,
+          note: `${note} ${
+            applyDiscount ? "(Discount applied)" : ""
+          } (Bulk payment)`,
+          applyAsFullPayment: applyDiscount, // New flag to indicate discount
         };
       });
 
@@ -112,6 +142,7 @@ export function BulkPaymentForm({ invoices, onSuccess }: BulkPaymentFormProps) {
       setReference("");
       setNote("");
       setSelectedInvoices([]);
+      setApplyDiscount(false);
     } catch (error) {
       toast.error("Failed to process bulk payment");
     } finally {
@@ -126,19 +157,20 @@ export function BulkPaymentForm({ invoices, onSuccess }: BulkPaymentFormProps) {
         <CardDescription>
           Total selected dues:{" "}
           <span className="font-semibold text-primary">
-            ₹
-            {selectedInvoices
-              .reduce((sum, id) => {
-                const invoice = invoices.find((inv) => inv.id === id);
-                return sum + (invoice ? invoice.total - invoice.amountPaid : 0);
-              }, 0)
-              .toFixed(2)}
+            ₹{selectedDue.toFixed(2)}
           </span>
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={selectedInvoices.length === invoices.length}
+                onCheckedChange={handleSelectAll}
+              />
+              <Label>Select All Invoices</Label>
+            </div>
             <Label>Select Invoices</Label>
             {invoices.map(
               (invoice) =>
@@ -173,6 +205,19 @@ export function BulkPaymentForm({ invoices, onSuccess }: BulkPaymentFormProps) {
               required
               min="0.01"
             />
+            <p className="text-sm text-muted-foreground mt-1">
+              Total Selected Due Amount: ₹{selectedDue.toFixed(2)}
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              checked={applyDiscount}
+              onCheckedChange={(checked) =>
+                setApplyDiscount(checked as boolean)
+              }
+            />
+            <Label>Mark as full payment (Apply discount)</Label>
           </div>
 
           <div>
