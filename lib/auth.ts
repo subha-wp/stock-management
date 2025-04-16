@@ -20,7 +20,7 @@ export const lucia = new Lucia(adapter, {
       email: attributes.email,
       name: attributes.name,
       avatarUrl: attributes.avatarUrl,
-      subscriptionId: attributes.subscriptionId,
+      subscriptionId: attributes?.subscriptionId,
     };
   },
 });
@@ -38,7 +38,7 @@ interface DatabaseUserAttributes {
   hashedPassword: string;
   name: string;
   avatarUrl: string;
-  subscriptionId: string;
+  subscriptionId?: string;
 }
 
 export const google = new Google(
