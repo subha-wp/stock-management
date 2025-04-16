@@ -79,14 +79,20 @@ export async function POST(request: Request) {
       payment = null,
     } = await request.json();
 
-    // Get the latest invoice number
-    const latestInvoice = await prisma.invoice.findFirst({
-      orderBy: { createdAt: "desc" },
+    // Get the business and increment lastInvoiceNumber
+    const business = await prisma.business.update({
+      where: { id: businessId },
+      data: {
+        lastInvoiceNumber: {
+          increment: 1,
+        },
+      },
     });
 
-    const nextNumber = latestInvoice
-      ? String(parseInt(latestInvoice.number) + 1).padStart(6, "0")
-      : "000001";
+    // Generate invoice number with prefix and padded number
+    const invoiceNumber = `${business.invoicePrefix}${business.lastInvoiceNumber
+      .toString()
+      .padStart(6, "0")}`;
 
     // Calculate total with custom prices
     let total = 0;
@@ -97,7 +103,7 @@ export async function POST(request: Request) {
       if (!product) {
         throw new Error(`Product not found: ${item.productId}`);
       }
-      const price = item.price ?? product.price; // Use custom price if provided
+      const price = item.price ?? product.price;
       const subtotal = price * item.quantity;
       const tax = (subtotal * product.taxPercent) / 100;
       total += subtotal + tax;
@@ -106,7 +112,7 @@ export async function POST(request: Request) {
     // Create invoice with items including custom prices
     const invoice = await prisma.invoice.create({
       data: {
-        number: nextNumber,
+        number: invoiceNumber,
         clientId,
         date: new Date(date),
         dueDate: new Date(dueDate),
@@ -118,7 +124,7 @@ export async function POST(request: Request) {
           create: items.map((item) => ({
             quantity: item.quantity,
             productId: item.productId,
-            price: item.price, // Store the custom price
+            price: item.price,
           })),
         },
       },
@@ -180,7 +186,7 @@ export async function POST(request: Request) {
           productId: item.productId,
           quantity: -item.quantity,
           type: "SALE",
-          note: `Invoice #${nextNumber}`,
+          note: `Invoice #${invoiceNumber}`,
           userId: user.id,
         },
       });

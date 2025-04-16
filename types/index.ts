@@ -42,6 +42,7 @@ export interface Business {
   bankName?: string;
   ifscCode?: string;
   accountNo?: string;
+  invoicePrefix?: string;
   upiId?: string;
   userId: string;
   createdAt: Date;

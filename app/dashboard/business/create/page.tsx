@@ -25,6 +25,7 @@ export default function CreateBusiness() {
   const [ifscCode, setIfscCode] = useState("");
   const [accountNo, setAccountNo] = useState("");
   const [upiId, setUpiId] = useState("");
+  const [invoicePrefix, setInvoicePrefix] = useState("INV");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -47,6 +48,7 @@ export default function CreateBusiness() {
         ifscCode,
         accountNo,
         upiId,
+        invoicePrefix,
       });
       toast.success("Business created successfully");
       router.push("/dashboard/business");
@@ -135,6 +137,21 @@ export default function CreateBusiness() {
             onChange={(e) => setLogoUrl(e.target.value)}
             placeholder="https://example.com/logo.png"
           />
+        </div>
+        <div>
+          <Label htmlFor="invoicePrefix">Invoice Number Prefix</Label>
+          <Input
+            id="invoicePrefix"
+            value={invoicePrefix}
+            onChange={(e) => setInvoicePrefix(e.target.value)}
+            placeholder="INV"
+            required
+            maxLength={5}
+          />
+          <p className="text-sm text-muted-foreground mt-1">
+            This prefix will be used for all invoices generated for this
+            business (e.g., INV001)
+          </p>
         </div>
         <div className="border-t pt-4 mt-4">
           <h2 className="text-lg font-semibold mb-4">Payment Details</h2>

@@ -61,7 +61,7 @@ export async function register(formData: FormData) {
 
     return { success: true };
   } catch (error) {
-    console.error("Registration error:", error);
+    console.log("Registration error:", error);
     return { error: "An error occurred during registration" };
   }
 }
